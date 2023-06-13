@@ -54,8 +54,6 @@ func SendEmail(to, subject, body, attachment string) error {
 }
 
 func CreateTransactions(c *gin.Context) {
-	// Load environment variables
-	LoadEnv()
 
 	var inputTransaction models.TransactionInput
 
@@ -66,22 +64,9 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	userId, exists := c.Get("id")
-	if !exists {
-		c.JSON(400, gin.H{
-			"error": "User ID not found",
-		})
-		return
-	}
-	strUserId, ok := userId.(string)
-	if !ok {
-		c.JSON(400, gin.H{
-			"error": "User ID is not a string",
-		})
-		return
-	}
+	userId := c.Param("id")
 
-	intUserId, err := strconv.Atoi(strUserId)
+	intUserId, err := strconv.Atoi(userId)
 	if err != nil {
 		c.JSON(400, gin.H{
 			"error": err.Error(),
