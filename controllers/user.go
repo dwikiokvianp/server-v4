@@ -25,10 +25,12 @@ func GetAllUser(c *gin.Context) {
 
 	db := config.DB
 
-	if role != "" {
+	if role != "" && username != "" {
+		modifiedUsername := "%" + username + "%"
+		db = db.Where("username LIKE ?", modifiedUsername).Where("role_id = ?", role)
+	}
+	if username == "" {
 		db = db.Where("role_id = ?", role)
-	} else if username != "" {
-		db = db.Where("username = ?", username)
 	}
 
 	var count int64
@@ -45,11 +47,13 @@ func GetAllUser(c *gin.Context) {
 		return
 	}
 
+	page = (int(count) + pageSize - 1) / pageSize
+
 	c.JSON(200, gin.H{
 		"data":     userList,
 		"page":     page,
 		"pageSize": pageSize,
-		"total":    count,
+		"total":    page,
 	})
 }
 

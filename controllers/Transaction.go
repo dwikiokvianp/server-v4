@@ -168,15 +168,37 @@ func GetAllTransactions(c *gin.Context) {
 }
 
 func GetByIdTransaction(c *gin.Context) {
-	id := c.Param("id")
-
 	var transaction models.Transaction
-	if err := config.DB.First(&transaction, id).Error; err != nil {
+	id := c.Param("id")
+	err := config.DB.Preload("Vehicle.VehicleType").Preload("User.Detail").Find(&transaction, id).Error
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": err.Error(),
+		})
+	}
+	c.JSON(200, gin.H{
+		"data": transaction,
+	})
+}
+
+func GetTransactionByUserId(c *gin.Context) {
+	var transaction []models.Transaction
+	id := c.Param("id")
+	err := config.DB.Preload("Vehicle.VehicleType").Preload("User.Detail").Where("user_id = ?", id).Find(&transaction).Error
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	if len(transaction) == 0 {
 		c.JSON(404, gin.H{
-			"error": "transaction not found",
+			"message": "Not Found",
 		})
 		return
 	}
 
-	c.JSON(200, transaction)
+	c.JSON(200, gin.H{
+		"data": transaction,
+	})
 }
