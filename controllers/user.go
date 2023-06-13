@@ -4,35 +4,52 @@ import (
 	"github.com/gin-gonic/gin"
 	"server-v2/config"
 	"server-v2/models"
+	"strconv"
 )
 
 func GetAllUser(c *gin.Context) {
-	var userList []models.User
+	var (
+		userList []models.User
+		pageSize = 10
+		page     = 1
+	)
+
+	pageParam := c.Query("page")
+	if pageParam != "" {
+		page, _ = strconv.Atoi(pageParam)
+	}
 
 	queryParams := c.Request.URL.Query()
 	role := queryParams.Get("role")
 	username := queryParams.Get("username")
+
+	db := config.DB
+
 	if role != "" {
-		err := config.DB.Where("role_id = ?", role).Preload("Role").Preload("Detail").Find(&userList).Error
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
+		db = db.Where("role_id = ?", role)
 	} else if username != "" {
-		err := config.DB.Where("username = ?", username).Preload("Role").Preload("Detail").Find(&userList).Error
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-	} else {
-		err := config.DB.Preload("Role").Preload("Detail").Find(&userList).Error
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
+		db = db.Where("username = ?", username)
 	}
+
+	var count int64
+	if err := db.Model(&models.User{}).Count(&count).Error; err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	offset := (page - 1) * pageSize
+
+	err := db.Offset(offset).Limit(pageSize).Preload("Role").Preload("Detail").Find(&userList).Error
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"data": userList,
+		"data":     userList,
+		"page":     page,
+		"pageSize": pageSize,
+		"total":    count,
 	})
 }
 

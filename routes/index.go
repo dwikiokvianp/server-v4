@@ -10,4 +10,5 @@ func Routes(c *gin.Engine) {
 	OilRoutes(c)
 	TransactionRoutes(c)
 	VehicleRoutes(c)
+	ProofRoutes(c)
 }

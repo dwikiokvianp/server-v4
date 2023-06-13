@@ -16,7 +16,14 @@ func InitDatabase(url string) *gorm.DB {
 		log.Fatalln(err)
 	}
 
-	migrateError := db.AutoMigrate(&models.Role{}, &models.User{}, &models.Oil{}, &models.VehicleType{}, &models.Vehicle{}, &models.Transaction{})
+	migrateError := db.AutoMigrate(
+		&models.Role{},
+		&models.User{}, 
+		&models.Oil{}, 
+		&models.VehicleType{},
+		&models.Vehicle{}, 
+	    &models.Transaction{},
+		&models.Proof{})
 	if migrateError != nil {
 		log.Fatalln(err)
 		return nil

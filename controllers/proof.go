@@ -2,53 +2,128 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"net/http"
-	"server-v2/config"
-	"server-v2/models"
 	"mime/multipart"
 	"os"
 	"path/filepath"
-	"math/rand"
 	"time"
-	"io"
+	"server-v2/models"
+	"server-v2/config"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
+func uploadImageToS3(sess *session.Session, bucket string, fileHeader *multipart.FileHeader) (string, error) {
+	file, err := fileHeader.Open()
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// Generate unique file name
+	fileExt := filepath.Ext(fileHeader.Filename)
+	fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), fileExt)
+
+	// Initialize S3 uploader
+	uploader := s3manager.NewUploader(sess)
+
+	// Upload file to S3
+	_, err = uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(fileName),
+		Body:   file,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	// Generate image URL from S3 bucket URL
+	s3BucketURL := os.Getenv("S3_BUCKET_URL")
+	fileURL := fmt.Sprintf("%s/%s", s3BucketURL, fileName)
+
+	return fileURL, nil
+}
+
 func CreateProof(c *gin.Context) {
-	var proof models.Proof
-
-	// Bind form data ke struct Proof
-	if err := c.ShouldBind(&proof); err != nil {
+	fileKTP, err := c.FormFile("photo_ktp")
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
+			"error": "Failed to read photo_ktp from request",
 		})
 		return
 	}
 
-	// Simpan gambar ke direktori lokal dan perbarui URL gambar di model Proof
-	if err := uploadProofImages(&proof, c); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to upload images",
+	fileOrang, err := c.FormFile("photo_orang")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to read photo_orang from request",
 		})
 		return
-	} else {
-		// Perbarui URL gambar di model Proof
-		if err := config.DB.Model(&proof).Updates(models.Proof{
-			PhotoKTPURL:    proof.PhotoKTPURL,
-			PhotoOrangURL:  proof.PhotoOrangURL,
-			PhotoTangkiURL: proof.PhotoTangkiURL,
-		}).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to update image URLs",
-			})
-			return
-		}
 	}
 
-	// Simpan model Proof ke database
-	if err := config.DB.Create(&proof).Error; err != nil {
+	fileTangki, err := c.FormFile("photo_tangki")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to read photo_tangki from request",
+		})
+		return
+	}
+
+	description := c.PostForm("description")
+
+	proof := &models.Proof{
+		Description: description,
+	}
+
+	// Initialize AWS session
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(os.Getenv("AWS_REGION")),
+	})
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to create proof",
+			"error": "Failed to initialize AWS session",
+		})
+		return
+	}
+
+	// Upload KTP image to S3
+	photoKTPURL, err := uploadImageToS3(sess, os.Getenv("S3_BUCKET_NAME"), fileKTP)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to upload KTP file to S3",
+		})
+		return
+	}
+	proof.PhotoKTPURL = photoKTPURL
+
+	// Upload orang image to S3
+	photoOrangURL, err := uploadImageToS3(sess, os.Getenv("S3_BUCKET_NAME"), fileOrang)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to upload orang file to S3",
+		})
+		return
+	}
+	proof.PhotoOrangURL = photoOrangURL
+
+	// Upload tangki image to S3
+	photoTangkiURL, err := uploadImageToS3(sess, os.Getenv("S3_BUCKET_NAME"), fileTangki)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to upload tangki file to S3",
+		})
+		return
+	}
+	proof.PhotoTangkiURL = photoTangkiURL
+
+	// Save proof to database
+	err = config.DB.Create(&proof).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to save proof to database",
 		})
 		return
 	}
@@ -57,93 +132,6 @@ func CreateProof(c *gin.Context) {
 		"message": "Proof created successfully",
 		"data":    proof,
 	})
-}
-
-func uploadProofImages(proof *models.Proof, c *gin.Context) error {
-	// Direktori tempat menyimpan gambar
-	imageDir := "uploads"
-
-	// Buat direktori jika belum ada
-	if err := os.MkdirAll(imageDir, os.ModePerm); err != nil {
-		return err
-	}
-
-	// Upload gambar KTP
-	photoKTP, err := c.FormFile("photo_ktp")
-	if err != nil {
-		return err
-	}
-	proof.PhotoKTPURL, err = uploadImage(imageDir, photoKTP)
-	if err != nil {
-		return err
-	}
-
-	// Upload gambar orang
-	photoOrang, err := c.FormFile("photo_orang")
-	if err != nil {
-		return err
-	}
-	proof.PhotoOrangURL, err = uploadImage(imageDir, photoOrang)
-	if err != nil {
-		return err
-	}
-
-	// Upload gambar tangki
-	photoTangki, err := c.FormFile("photo_tangki")
-	if err != nil {
-		return err
-	}
-	proof.PhotoTangkiURL, err = uploadImage(imageDir, photoTangki)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func uploadImage(imageDir string, fileHeader *multipart.FileHeader) (string, error) {
-	file, err := fileHeader.Open()
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	// Generate nama file unik
-	fileExt := filepath.Ext(fileHeader.Filename)
-	fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), fileExt)
-
-	// Buat file baru di direktori tempat penyimpanan
-	dstPath := filepath.Join(imageDir, fileName)
-	dstFile, err := os.Create(dstPath)
-	if err != nil {
-		return "", err
-	}
-	defer dstFile.Close()
-
-	// Salin data file ke file baru
-	if _, err := file.Seek(0, 0); err != nil {
-		return "", err
-	}
-	if _, err := io.Copy(dstFile, file); err != nil {
-		return "", err
-	}
-
-	// Generate URL gambar dari path file lokal
-	imageURL := fmt.Sprintf("/%s/%s", imageDir, fileName)
-
-	return imageURL, nil
-}
-
-var randomGenerator = rand.New(rand.NewSource(time.Now().UnixNano()))
-
-func GenerateRandomString(n int) string {
-	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[randomGenerator.Intn(len(letterRunes))]
-	}
-	return string(b)
 }
 
 func GetAllProofs(c *gin.Context) {
