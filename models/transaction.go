@@ -9,6 +9,7 @@ type Transaction struct {
 	Vehicle   Vehicle `gorm:"foreignkey:VehicleId"`
 	OilId     int     `gorm:"not null" json:"oil_id"`
 	Oil       Oil     `gorm:"foreignkey:OilId"`
+	QrCodeUrl string `gorm:"not null" json:"qr_code_url" `
 	CreatedAt int64   `gorm:"autoCreateTime" json:"created_at"`
 }
 
@@ -17,4 +18,5 @@ type TransactionInput struct {
 	VehicleId int    `gorm:"not null" json:"vehicle_id"`
 	OilId     int    `gorm:"not null" json:"oil_id"`
 	Email     string `gorm:"not null" json:"email"`
+	QrCodeUrl string 
 }

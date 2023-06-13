@@ -11,5 +11,6 @@ func TransactionRoutes(c *gin.Engine) {
 		transactionGroup.GET("", controllers.GetAllTransactions)
 		transactionGroup.POST("/:id", controllers.CreateTransactions)
 		transactionGroup.GET("/:id", controllers.GetByIdTransaction)
+		transactionGroup.GET("/user/:id", controllers.GetTransactionByUserId)
 	}
 }

@@ -10,6 +10,10 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	// "github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 func LoadEnv() {
@@ -26,6 +30,39 @@ func GenerateQRCode(data string) (string, error) {
 		return "", err
 	}
 	return qrFile, nil
+}
+
+func UploadToS3(file string, key string) (string, error) {
+	region := os.Getenv("AWS_REGION")
+	bucketName := os.Getenv("S3_BUCKET_NAME")
+	bucketURL := os.Getenv("S3_BUCKET_URL")
+
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(region),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	svc := s3.New(sess)
+
+	f, err := os.Open(file)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	_, err = svc.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+		Body:   f,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	url := bucketURL + key
+	return url, nil
 }
 
 func SendEmail(to, subject, body, attachment string) error {
@@ -54,7 +91,6 @@ func SendEmail(to, subject, body, attachment string) error {
 }
 
 func CreateTransactions(c *gin.Context) {
-
 	var inputTransaction models.TransactionInput
 
 	if err := c.ShouldBindJSON(&inputTransaction); err != nil {
@@ -91,6 +127,16 @@ func CreateTransactions(c *gin.Context) {
 	// Generate QR code
 	qrData := strconv.Itoa(int(transaction.ID))
 	qrFile, err := GenerateQRCode(qrData)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Upload QR code to S3
+	key := "qrcodes/" + qrFile
+	qrURL, err := UploadToS3(qrFile, key)
 	if err != nil {
 		c.JSON(500, gin.H{
 			"error": err.Error(),
@@ -139,11 +185,23 @@ func CreateTransactions(c *gin.Context) {
 	</head>
 	<body>
 		<p>Tunjukkan QR kode ini kepada petugas untuk mendapatkan layanan.</p>
+		<div class="qr-code">
+			<img src="` + qrURL + `" alt="QR Code">
+		</div>
 	</body>
 	</html>
 	`
-	err = SendEmail(email, subject, body, qrFile)
+	err = SendEmail(email, subject, body, "")
 	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Update transaction with QR code URL
+	transaction.QrCodeUrl = qrURL
+	if err := config.DB.Save(&transaction).Error; err != nil {
 		c.JSON(500, gin.H{
 			"error": err.Error(),
 		})
