@@ -2,10 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"server-v2/config"
@@ -15,6 +11,7 @@ import (
 	"path/filepath"
 	"math/rand"
 	"time"
+	"io"
 )
 
 func CreateProof(c *gin.Context) {
@@ -28,10 +25,10 @@ func CreateProof(c *gin.Context) {
 		return
 	}
 
-	// Simpan gambar ke S3 dan perbarui URL gambar di model Proof
+	// Simpan gambar ke direktori lokal dan perbarui URL gambar di model Proof
 	if err := uploadProofImages(&proof, c); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to upload images to S3",
+			"error": "Failed to upload images",
 		})
 		return
 	} else {
@@ -63,29 +60,20 @@ func CreateProof(c *gin.Context) {
 }
 
 func uploadProofImages(proof *models.Proof, c *gin.Context) error {
-	// Membaca konfigurasi S3 dari environment variables
-	region := os.Getenv("AWS_REGION")
-	accessKeyID := os.Getenv("AWS_ACCESS_KEY_ID")
-	secretAccessKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
+	// Direktori tempat menyimpan gambar
+	imageDir := "uploads"
 
-	// Inisialisasi session AWS
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(region),
-		Credentials: credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
-	})
-	if err != nil {
+	// Buat direktori jika belum ada
+	if err := os.MkdirAll(imageDir, os.ModePerm); err != nil {
 		return err
 	}
-
-	// Membaca URL bucket S3 dari environment variable
-	s3BucketURL := os.Getenv("S3_BUCKET_URL")
 
 	// Upload gambar KTP
 	photoKTP, err := c.FormFile("photo_ktp")
 	if err != nil {
 		return err
 	}
-	proof.PhotoKTPURL, err = uploadImageToS3(sess, s3BucketURL, photoKTP)
+	proof.PhotoKTPURL, err = uploadImage(imageDir, photoKTP)
 	if err != nil {
 		return err
 	}
@@ -95,7 +83,7 @@ func uploadProofImages(proof *models.Proof, c *gin.Context) error {
 	if err != nil {
 		return err
 	}
-	proof.PhotoOrangURL, err = uploadImageToS3(sess, s3BucketURL, photoOrang)
+	proof.PhotoOrangURL, err = uploadImage(imageDir, photoOrang)
 	if err != nil {
 		return err
 	}
@@ -105,7 +93,7 @@ func uploadProofImages(proof *models.Proof, c *gin.Context) error {
 	if err != nil {
 		return err
 	}
-	proof.PhotoTangkiURL, err = uploadImageToS3(sess, s3BucketURL, photoTangki)
+	proof.PhotoTangkiURL, err = uploadImage(imageDir, photoTangki)
 	if err != nil {
 		return err
 	}
@@ -113,7 +101,7 @@ func uploadProofImages(proof *models.Proof, c *gin.Context) error {
 	return nil
 }
 
-func uploadImageToS3(sess *session.Session, bucket string, fileHeader *multipart.FileHeader) (string, error) {
+func uploadImage(imageDir string, fileHeader *multipart.FileHeader) (string, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
 		return "", err
@@ -124,19 +112,26 @@ func uploadImageToS3(sess *session.Session, bucket string, fileHeader *multipart
 	fileExt := filepath.Ext(fileHeader.Filename)
 	fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), fileExt)
 
-	// Upload file ke S3
-	svc := s3.New(sess)
-	_, err = svc.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(fileName),
-		Body:   file,
-	})
+	// Buat file baru di direktori tempat penyimpanan
+	dstPath := filepath.Join(imageDir, fileName)
+	dstFile, err := os.Create(dstPath)
 	if err != nil {
 		return "", err
 	}
+	defer dstFile.Close()
 
-	// Generate URL gambar dari S3 bucket URL
-	return fmt.Sprintf("%s/%s", bucket, fileName), nil
+	// Salin data file ke file baru
+	if _, err := file.Seek(0, 0); err != nil {
+		return "", err
+	}
+	if _, err := io.Copy(dstFile, file); err != nil {
+		return "", err
+	}
+
+	// Generate URL gambar dari path file lokal
+	imageURL := fmt.Sprintf("/%s/%s", imageDir, fileName)
+
+	return imageURL, nil
 }
 
 var randomGenerator = rand.New(rand.NewSource(time.Now().UnixNano()))
