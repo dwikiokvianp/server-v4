@@ -43,7 +43,7 @@ func uploadImageToS3(sess *session.Session, bucket string, fileHeader *multipart
 
 	// Generate image URL from S3 bucket URL
 	s3BucketURL := os.Getenv("S3_BUCKET_URL")
-	fileURL := fmt.Sprintf("%s/%s", s3BucketURL, fileName)
+	fileURL := fmt.Sprintf("%s%s", s3BucketURL, fileName)
 
 	return fileURL, nil
 }
