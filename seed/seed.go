@@ -50,11 +50,13 @@ func GenerateFakeUsers(count, role int) {
 			fmt.Println(err)
 		} else {
 			user := models.User{
-				Username: fake.Person().LastName(),
-				Password: fake.Internet().Password(),
-				Email:    fake.Internet().Email(),
-				RoleId:   role,
-				DetailId: detail.Id,
+				Username:  fake.Person().LastName(),
+				Password:  fake.Internet().Password(),
+				Email:     fake.Internet().Email(),
+				RoleId:    role,
+				DetailId:  detail.Id,
+				CompanyID: count,
+				Phone:     fake.Phone().Number(),
 			}
 			err := config.DB.Create(&user).Error
 			if err != nil {
@@ -91,6 +93,37 @@ func generateVehicle(num, vehicleType int) {
 	}
 }
 
+func generateFakeCompany(num int) {
+	fake := faker.New()
+	for i := 0; i < num; i++ {
+		company := models.Company{
+			CompanyName:    fake.Company().Name(),
+			Address:        fake.Address().Address(),
+			CompanyDetail:  fake.Company().Suffix(),
+			CompanyZipCode: fake.RandomNumber(5),
+		}
+		err := config.DB.Create(&company).Error
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
+func generateFakeEmployee(num int) {
+	fake := faker.New()
+	for i := 0; i < num; i++ {
+		employee := models.Officer{
+			Username: fake.Person().LastName(),
+			Password: fake.Company().Suffix(),
+			Email:    fake.Internet().Email(),
+		}
+		err := config.DB.Create(&employee).Error
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
 func main() {
 	failedLoadEnv := godotenv.Load()
 	if failedLoadEnv != nil {
@@ -102,11 +135,13 @@ func main() {
 	}
 
 	fmt.Println("Migration started")
-	roles := []string{"ADMIN_MADAM", "DRIVER", "PETUGAS", "USER"}
+	roles := []string{"ADMIN_MADAM", "DRIVER", "USER"}
 	vehicleType := []string{"SHIP", "TRUCK"}
 	GenerateRoles(roles)
 	GenerateVehicleType(vehicleType)
 	GenerateOil(10)
+	generateFakeCompany(10)
+	generateFakeEmployee(10)
 
 	generateVehicle(10, 1)
 	generateVehicle(10, 2)
@@ -114,6 +149,5 @@ func main() {
 	GenerateFakeUsers(10, 1)
 	GenerateFakeUsers(10, 2)
 	GenerateFakeUsers(10, 3)
-	GenerateFakeUsers(10, 4)
 	fmt.Println("Migration finished")
 }

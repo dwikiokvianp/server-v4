@@ -5,6 +5,6 @@ type Company struct {
 	CompanyName    string `json:"username"`
 	Address        string `json:"password"`
 	CompanyDetail  string `json:"company_detail"`
-	CompanyZipCode string `json:"company_zip_code"`
+	CompanyZipCode int    `json:"company_zip_code"`
 	CreatedAt      int64  `gorm:"autoCreateTime" json:"created_at"`
 }
