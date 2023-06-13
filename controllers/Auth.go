@@ -17,6 +17,20 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
+	// Cek keberadaan nama pengguna
+	var existingUsername models.User
+	if err := config.DB.Where("username = ?", input.Username).First(&existingUsername).Error; err == nil {
+		c.JSON(400, gin.H{"error": "Username already exists"})
+		return
+	}
+
+	// Cek keberadaan alamat email
+	var existingEmail models.User
+	if err := config.DB.Where("email = ?", input.Email).First(&existingEmail).Error; err == nil {
+		c.JSON(400, gin.H{"error": "Email already exists"})
+		return
+	}
+
 	detail = models.Detail{
 		Balance: 0,
 		Credit:  0,
@@ -36,7 +50,7 @@ func RegisterUser(c *gin.Context) {
 		Email:    input.Email,
 		Password: hash,
 		RoleId:   input.RoleId,
-		DetailId: detail.Id,
+			DetailId: detail.Id,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
