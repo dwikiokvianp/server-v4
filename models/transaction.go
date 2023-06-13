@@ -8,7 +8,6 @@ type Transaction struct {
 	Vehicle   Vehicle
 	OilId     int `gorm:"not null" json:"oil_id" `
 	Oil       Oil
-	QrCodeUrl string `gorm:"not null" json:"qr_code_url" `
 	CreatedAt int64  `gorm:"autoCreateTime" json:"created_at"`
 }
 
