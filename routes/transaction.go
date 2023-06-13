@@ -6,7 +6,7 @@ import (
 )
 
 func TransactionRoutes(c *gin.Engine) {
-	transactionGroup := c.Group("/transaction")
+	transactionGroup := c.Group("/transactions")
 	{
 		transactionGroup.GET("", controllers.GetAllTransactions)
 		transactionGroup.POST("/:id", controllers.CreateTransactions)

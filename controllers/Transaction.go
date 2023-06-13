@@ -2,14 +2,14 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/skip2/go-qrcode"
 	"gopkg.in/gomail.v2"
+	"log"
+	"os"
 	"server-v2/config"
 	"server-v2/models"
 	"strconv"
-	"github.com/joho/godotenv"
-	"log"
-	"os"
 )
 
 func LoadEnv() {
@@ -157,11 +157,12 @@ func CreateTransactions(c *gin.Context) {
 
 func GetAllTransactions(c *gin.Context) {
 	var transactions []models.Transaction
-	if err := config.DB.Find(&transactions).Error; err != nil {
-		c.JSON(500, gin.H{
+
+	err := config.DB.Preload("User").Preload("Vehicle.VehicleType").Preload("Oil").Find(&transactions).Error
+	if err != nil {
+		c.JSON(400, gin.H{
 			"error": err.Error(),
 		})
-		return
 	}
 
 	c.JSON(200, transactions)
