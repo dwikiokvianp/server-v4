@@ -5,9 +5,10 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
-	"time"
-	"server-v2/models"
 	"server-v2/config"
+	"server-v2/models"
+	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -74,8 +75,13 @@ func CreateProof(c *gin.Context) {
 
 	description := c.PostForm("description")
 
+	transactionId := c.Param("id")
+
+	transactionIdInt, err := strconv.Atoi(transactionId)
+
 	proof := &models.Proof{
-		Description: description,
+		TransactionID: transactionIdInt,
+		Description:   description,
 	}
 
 	// Initialize AWS session
