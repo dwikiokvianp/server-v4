@@ -1,42 +1,64 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/skip2/go-qrcode"
+	"gopkg.in/gomail.v2"
 	"server-v2/config"
 	"server-v2/models"
 	"strconv"
+	"github.com/joho/godotenv"
+	"log"
+	"os"
 )
 
-func GetAllTransactions(c *gin.Context) {
-	var transactions []models.Transaction
-
-	config.DB.Preload("User").Preload("Vehicle").Preload("Oil").Find(&transactions)
-
-	c.JSON(200, gin.H{
-		"data": transactions,
-	})
+func LoadEnv() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 }
 
-func GetByIdTransaction(c *gin.Context) {
-	var transaction models.Transaction
-	id := c.Param("id")
-	err := config.DB.Preload("Vehicle.VehicleType").Preload("User.Detail").Find(&transaction, id).Error
+func GenerateQRCode(data string) (string, error) {
+	qrFile := "qrcode.png"
+	err := qrcode.WriteFile(data, qrcode.Medium, 256, qrFile)
 	if err != nil {
-		c.JSON(400, gin.H{
-			"error": err.Error(),
-		})
+		return "", err
+	}
+	return qrFile, nil
+}
+
+func SendEmail(to, subject, body, attachment string) error {
+	from := os.Getenv("SMTP_USERNAME")
+	password := os.Getenv("SMTP_PASSWORD")
+	smtpHost := os.Getenv("SMTP_HOST")
+	smtpPort, _ := strconv.Atoi(os.Getenv("SMTP_PORT"))
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", from)
+	m.SetHeader("To", to)
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", body)
+
+	if attachment != "" {
+		m.Attach(attachment)
 	}
 
-	c.JSON(200, gin.H{
-		"data": transaction,
-	})
+	d := gomail.NewDialer(smtpHost, smtpPort, from, password)
+
+	err := d.DialAndSend(m)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func CreateTransactions(c *gin.Context) {
+	// Load environment variables
+	LoadEnv()
+
 	var inputTransaction models.TransactionInput
 
-	fmt.Printf("ini merupakan sampe")
 	if err := c.ShouldBindJSON(&inputTransaction); err != nil {
 		c.JSON(400, gin.H{
 			"error": err.Error(),
@@ -44,9 +66,22 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	userId := c.Param("id")
+	userId, exists := c.Get("id")
+	if !exists {
+		c.JSON(400, gin.H{
+			"error": "User ID not found",
+		})
+		return
+	}
+	strUserId, ok := userId.(string)
+	if !ok {
+		c.JSON(400, gin.H{
+			"error": "User ID is not a string",
+		})
+		return
+	}
 
-	intUserId, err := strconv.Atoi(userId)
+	intUserId, err := strconv.Atoi(strUserId)
 	if err != nil {
 		c.JSON(400, gin.H{
 			"error": err.Error(),
@@ -56,9 +91,9 @@ func CreateTransactions(c *gin.Context) {
 
 	transaction := models.Transaction{
 		UserId:    intUserId,
+		Email:     inputTransaction.Email,
 		VehicleId: inputTransaction.VehicleId,
 		OilId:     inputTransaction.OilId,
-		QrCodeUrl: inputTransaction.QrCodeUrl,
 	}
 
 	if err := config.DB.Create(&transaction).Error; err != nil {
@@ -68,8 +103,95 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
+	// Generate QR code
+	qrData := strconv.Itoa(int(transaction.ID))
+	qrFile, err := GenerateQRCode(qrData)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Send email with QR code
+	email := inputTransaction.Email
+	subject := "QR Code Transaction"
+	body := `
+	<html>
+	<head>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				background-color: #f2f2f2;
+				padding: 20px;
+			}
+			
+			h1 {
+				color: #333333;
+				font-size: 24px;
+				font-weight: bold;
+				margin-bottom: 20px;
+			}
+			
+			p {
+				color: #666666;
+				font-size: 16px;
+				line-height: 1.5;
+				margin-bottom: 10px;
+			}
+			
+			.qr-code {
+				display: block;
+				text-align: center;
+				margin-bottom: 20px;
+			}
+			
+			.qr-code img {
+				max-width: 200px;
+				height: auto;
+			}
+		</style>
+	</head>
+	<body>
+		<p>Tunjukkan QR kode ini kepada petugas untuk mendapatkan layanan.</p>
+	</body>
+	</html>
+	`
+	err = SendEmail(email, subject, body, qrFile)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	c.JSON(200, gin.H{
 		"message": "success create transaction",
 	})
+}
 
+func GetAllTransactions(c *gin.Context) {
+	var transactions []models.Transaction
+	if err := config.DB.Find(&transactions).Error; err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, transactions)
+}
+
+func GetByIdTransaction(c *gin.Context) {
+	id := c.Param("id")
+
+	var transaction models.Transaction
+	if err := config.DB.First(&transaction, id).Error; err != nil {
+		c.JSON(404, gin.H{
+			"error": "transaction not found",
+		})
+		return
+	}
+
+	c.JSON(200, transaction)
 }
