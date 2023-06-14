@@ -1,12 +1,17 @@
 package controllers
 
 import (
+	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/skip2/go-qrcode"
 	"gopkg.in/gomail.v2"
 	"log"
 	"os"
+
 	"server-v2/config"
 	"server-v2/models"
 	"strconv"
@@ -26,6 +31,38 @@ func GenerateQRCode(data string) (string, error) {
 		return "", err
 	}
 	return qrFile, nil
+}
+func UploadToS3(file string, key string) (string, error) {
+	region := os.Getenv("AWS_REGION")
+	bucketName := os.Getenv("S3_BUCKET_NAME")
+	bucketURL := os.Getenv("S3_BUCKET_URL")
+
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(region),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	svc := s3.New(sess)
+
+	f, err := os.Open(file)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	_, err = svc.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+		Body:   f,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	url := bucketURL + key
+	return url, nil
 }
 
 func SendEmail(to, subject, body, attachment string) error {
@@ -79,6 +116,9 @@ func CreateTransactions(c *gin.Context) {
 		Email:     inputTransaction.Email,
 		VehicleId: inputTransaction.VehicleId,
 		OilId:     inputTransaction.OilId,
+		Quantity:  inputTransaction.Quantity,
+		OfficerId: inputTransaction.OfficerId,
+		Status:    "pending",
 	}
 
 	if err := config.DB.Create(&transaction).Error; err != nil {
@@ -98,7 +138,16 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	// Send email with QR code
+	// Upload QR code to S3
+	key := "qrcodes/" + qrFile
+	qrURL, err := UploadToS3(qrFile, key)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	email := inputTransaction.Email
 	subject := "QR Code Transaction"
 	body := `
@@ -139,11 +188,23 @@ func CreateTransactions(c *gin.Context) {
 	</head>
 	<body>
 		<p>Tunjukkan QR kode ini kepada petugas untuk mendapatkan layanan.</p>
+		<div class="qr-code">
+			<img src="` + qrURL + `" alt="QR Code">
+		</div>
 	</body>
 	</html>
 	`
-	err = SendEmail(email, subject, body, qrFile)
+	err = SendEmail(email, subject, body, "")
 	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Update transaction with QR code URL
+	transaction.QrCodeUrl = qrURL
+	if err := config.DB.Save(&transaction).Error; err != nil {
 		c.JSON(500, gin.H{
 			"error": err.Error(),
 		})
@@ -156,22 +217,54 @@ func CreateTransactions(c *gin.Context) {
 }
 
 func GetAllTransactions(c *gin.Context) {
-	var transactions []models.Transaction
+	var (
+		transactions []models.Transaction
+		pageSize     = 5
+		page         = 1
+	)
 
-	err := config.DB.Preload("User").Preload("Vehicle.VehicleType").Preload("Oil").Find(&transactions).Error
-	if err != nil {
-		c.JSON(400, gin.H{
-			"error": err.Error(),
-		})
+	pageParam := c.Query("page")
+	if pageParam != "" {
+		page, _ = strconv.Atoi(pageParam)
 	}
 
-	c.JSON(200, transactions)
+	db := config.DB
+
+	var count int64
+	if err := db.Model(&models.Transaction{}).Count(&count).Error; err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	offset := (page - 1) * pageSize
+
+	err := db.Offset(offset).Limit(pageSize).
+		Preload("Vehicle.VehicleType").
+		Preload("User.Role").
+		Preload("Officer").
+		Preload("User.Detail").
+		Preload("User.Company").
+		Preload("Oil").
+		Find(&transactions).Error
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	totalPages := (int(count) + pageSize - 1) / pageSize
+
+	c.JSON(200, gin.H{
+		"data":     transactions,
+		"page":     page,
+		"pageSize": pageSize,
+		"total":    totalPages,
+	})
 }
 
 func GetByIdTransaction(c *gin.Context) {
 	var transaction models.Transaction
 	id := c.Param("id")
-	err := config.DB.Preload("Vehicle.VehicleType").Preload("User.Detail").Find(&transaction, id).Error
+	err := config.DB.Preload("Vehicle.VehicleType").Preload("User.Role").Preload("Officer").Preload("User.Detail").Preload("User.Company").Preload("Oil").Find(&transaction, id).Error
 	if err != nil {
 		c.JSON(400, gin.H{
 			"error": err.Error(),
@@ -185,7 +278,8 @@ func GetByIdTransaction(c *gin.Context) {
 func GetTransactionByUserId(c *gin.Context) {
 	var transaction []models.Transaction
 	id := c.Param("id")
-	err := config.DB.Preload("Vehicle.VehicleType").Preload("User.Detail").Where("user_id = ?", id).Find(&transaction).Error
+	fmt.Println(id)
+	err := config.DB.Preload("Vehicle.VehicleType").Preload("Oil").Preload("User.Detail").Where("user_id = ?", id).Find(&transaction).Error
 	if err != nil {
 		c.JSON(400, gin.H{
 			"error": err.Error(),

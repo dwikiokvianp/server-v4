@@ -20,7 +20,10 @@ func main() {
 	config.InitDatabase(databaseUrl)
 
 	server := gin.New()
-	server.Use(cors.Default())
+	myCorsConfig := cors.DefaultConfig()
+	myCorsConfig.AllowAllOrigins = true
+	myCorsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
+	server.Use(cors.New(myCorsConfig))
 	routes.Routes(server)
 	err := server.Run(port)
 

@@ -134,8 +134,25 @@ func CreateProof(c *gin.Context) {
 		return
 	}
 
+	var transaction models.Transaction
+	if err := config.DB.First(&transaction, transactionId).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Transaction not found",
+		})
+		return
+	}
+
+	transaction.Status = "done"
+
+	if err := config.DB.Save(&transaction).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update transaction status",
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Proof created successfully",
+		"message": "Proof created successfully and transaction status updated to done",
 		"data":    proof,
 	})
 }
@@ -170,4 +187,22 @@ func GetProofByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data": proof,
 	})
+}
+
+func GetProofByTransactionId(c *gin.Context) {
+	var proofs models.Proof
+
+	transactionId := c.Param("id")
+
+	if err := config.DB.Where("transaction_id = ?", transactionId).First(&proofs).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Proof not found",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": proofs,
+	})
+
 }

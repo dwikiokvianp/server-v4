@@ -50,7 +50,7 @@ func RegisterUser(c *gin.Context) {
 		Email:    input.Email,
 		Password: hash,
 		RoleId:   input.RoleId,
-			DetailId: detail.Id,
+		DetailId: detail.Id,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
@@ -76,12 +76,17 @@ func LoginUser(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := config.DB.Preload("Role").Where("Email = ?", inputAuth.Email).Find(&user).Error; err != nil {
+	if err := config.DB.Where("Email = ?", inputAuth.Email).Preload("Role").Find(&user).Error; err != nil {
 		c.JSON(500, gin.H{"message": "username or password is incorrect"})
 		return
 	}
 
-	if !utils.CheckPasswordHash(inputAuth.Password, user.Password) {
+	//if !utils.CheckPasswordHash(inputAuth.Password, user.Password) {
+	//	c.JSON(401, gin.H{"message": "username or password is incorrect"})
+	//	return
+	//}
+
+	if inputAuth.Password != user.Password {
 		c.JSON(401, gin.H{"message": "username or password is incorrect"})
 		return
 	}

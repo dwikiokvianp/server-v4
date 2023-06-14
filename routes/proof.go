@@ -12,5 +12,6 @@ func ProofRoutes(c *gin.Engine) {
 		proofGroup.POST("/:id", controllers.CreateProof)
 		proofGroup.GET("/", controllers.GetAllProofs)
 		proofGroup.GET("/:id", controllers.GetProofByID)
+		proofGroup.GET("/transaction/:id", controllers.GetProofByTransactionId)
 	}
 }
