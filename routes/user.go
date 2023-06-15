@@ -10,5 +10,7 @@ func UserRoutes(c *gin.Engine) {
 	{
 		userGroup.GET("", controllers.GetAllUser)
 		userGroup.GET("/:id", controllers.GetUserById)
+		userGroup.POST("", controllers.CreateUser)
+		userGroup.PUT("/balance-credit", controllers.UpdateBalanceAndCredit)
 	}
 }
