@@ -73,17 +73,19 @@ func GetTodayTransactions(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-		
+
+	// Mengambil query parameter "username" dari URL
+	username := c.Query("username")
+
 	// Membuat slice untuk menyimpan objek transaksi dalam format yang diinginkan
 	response := make([]gin.H, 0)
 	today := time.Now().Format("02-01-2006")
 	for _, transaction := range transactions {
 		createdAt := time.Unix(transaction.CreatedAt, 0).Format("02-01-2006")
-		if createdAt == today {
+		if createdAt == today && (username == "" || transaction.User.Username == username) {
 			response = append(response, gin.H{
 				"id":       transaction.ID,
-				"name":     transaction.User.Username,
-				"phone":    transaction.User.Phone,
+				"username": transaction.User.Username,
 				"date":     createdAt,
 				"quantity": transaction.Quantity,
 				"status":   transaction.Status,
