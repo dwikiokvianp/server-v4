@@ -73,7 +73,7 @@ func GetTodayTransactions(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+		
 	// Membuat slice untuk menyimpan objek transaksi dalam format yang diinginkan
 	response := make([]gin.H, 0)
 	today := time.Now().Format("02-01-2006")

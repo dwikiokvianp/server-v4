@@ -259,7 +259,7 @@ func GetAllTransactions(c *gin.Context) {
 }
 
 func GetByIdTransaction(c *gin.Context) {
-	var transaction models.Transaction
+	var transaction  models.Transaction
 	id := c.Param("id")
 	err := config.DB.Preload("Vehicle.VehicleType").Preload("User.Role").Preload("Officer").Preload("User.Detail").Preload("User.Company").Preload("Oil").Find(&transaction, id).Error
 	if err != nil {
@@ -297,10 +297,17 @@ func GetTransactionByUserId(c *gin.Context) {
 
 func GetTodayTransactions() ([]models.Transaction, error) {
 	var transactions []models.Transaction
+
 	now := time.Now()
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, now.Location())
-	if err := config.DB.Where("created_at BETWEEN ? AND ?", startOfToday.Unix(), endOfToday.Unix()).Find(&transactions).Error; err != nil {
+
+	err := config.DB.
+		Preload("User").
+		Where("created_at BETWEEN ? AND ?", startOfToday.Unix(), endOfToday.Unix()).
+		Find(&transactions).Error
+
+	if err != nil {
 		return nil, err
 	}
 
