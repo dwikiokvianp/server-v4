@@ -15,11 +15,11 @@ func CreateUser(c *gin.Context) {
 	}
 
 	user := models.User{
-		Username:  userInput.Username,
-		Password:  userInput.Password,
-		Email:     userInput.Email,
-		RoleId:    userInput.RoleId,
-		DetailId:  userInput.DetailId,
+		Username: userInput.Username,
+		Password: userInput.Password,
+		Email:    userInput.Email,
+		RoleId:   userInput.RoleId,
+		DetailId: userInput.DetailId,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
@@ -103,9 +103,11 @@ func GetAllUser(c *gin.Context) {
 	if role != "" && username != "" {
 		modifiedUsername := "%" + username + "%"
 		db = db.Where("username LIKE ?", modifiedUsername).Where("role_id = ?", role)
-	}
-	if username == "" {
+	} else if role != "" {
 		db = db.Where("role_id = ?", role)
+	} else if username != "" {
+		modifiedUsername := "%" + username + "%"
+		db = db.Where("username LIKE ?", modifiedUsername)
 	}
 
 	var count int64
@@ -145,4 +147,3 @@ func GetUserById(c *gin.Context) {
 		"data": user,
 	})
 }
-
