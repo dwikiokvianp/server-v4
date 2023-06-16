@@ -85,7 +85,8 @@ func GetTodayTransactions(c *gin.Context) {
 		if createdAt == today && (username == "" || transaction.User.Username == username) {
 			response = append(response, gin.H{
 				"id":       transaction.ID,
-				"username": transaction.User.Username,
+				"name":     transaction.User.Username,
+				"phone":    transaction.User.Phone,
 				"date":     createdAt,
 				"quantity": transaction.Quantity,
 				"status":   transaction.Status,
@@ -95,5 +96,6 @@ func GetTodayTransactions(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
 
 
