@@ -40,17 +40,18 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	hash, err := utils.HashPassword(input.Password)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
+	//hash, err := utils.HashPassword(input.Password)
+	//if err != nil {
+	//	c.JSON(500, gin.H{"error": err.Error()})
+	//	return
+	//}
 	user := models.User{
-		Username: input.Username,
-		Email:    input.Email,
-		Password: hash,
-		RoleId:   input.RoleId,
-		DetailId: detail.Id,
+		Username:  input.Username,
+		Email:     input.Email,
+		Password:  input.Password,
+		RoleId:    3,
+		DetailId:  detail.Id,
+		CompanyID: input.CompanyID,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {

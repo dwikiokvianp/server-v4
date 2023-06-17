@@ -16,11 +16,12 @@ type User struct {
 }
 
 type UserInput struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
-	RoleId   int    `json:"role_id"`
-	DetailId int    `json:"detail_id"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Email     string `json:"email"`
+	RoleId    int    `json:"role_id"`
+	DetailId  int    `json:"detail_id"`
+	CompanyID int    `json:"company_id"`
 }
 
 type UserResponse struct {

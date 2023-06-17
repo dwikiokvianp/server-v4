@@ -16,6 +16,7 @@ func TransactionRoutes(router *gin.Engine) {
 		transactionGroup.GET("/:id", controllers.GetByIdTransaction)
 		transactionGroup.GET("/user/:id", controllers.GetTransactionByUserId)
 		transactionGroup.GET("/summary", GetTodayTransactionsHandler)
+		transactionGroup.GET("/tomorrow", GetTomorrowTransactions)
 		transactionGroup.GET("/today", GetTodayTransactions)
 	}
 }
@@ -38,14 +39,11 @@ func GetTodayTransactionsHandler(c *gin.Context) {
 	startOfTomorrow := endOfToday.Add(24 * time.Hour)
 
 	for _, transaction := range transactions {
-		createdAt := time.Unix(transaction.CreatedAt, 0)
-		if createdAt.Before(now) {
+		if transaction.Date.Before(now) {
 			orderDone++
 			orderToday++
-		} else if createdAt.After(now) {
-			if transaction.DeliveryTime > endOfToday.Unix() && transaction.DeliveryTime < startOfTomorrow.Unix() {
-				orderTomorrow++
-			}
+		} else if transaction.Date.After(endOfToday) && transaction.Date.Before(startOfTomorrow) {
+			orderTomorrow++
 		}
 
 		if transaction.Quantity > 0 {
@@ -56,11 +54,40 @@ func GetTodayTransactionsHandler(c *gin.Context) {
 	}
 
 	response := gin.H{
-		"order_done":     orderDone,
-		"order_today":    orderToday,
-		"order_tomorrow": orderTomorrow,
-		"oil_in":         oilIn,
-		"oil_out":        oilOut,
+		"order_done":  orderDone,
+		"order_today": orderToday,
+		"oil_in":      oilIn,
+		"oil_out":     oilOut,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func GetTomorrowTransactions(c *gin.Context) {
+	transactions, err := controllers.GetTomorrowTransactions()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get query parameter "username" from the URL
+	username := c.Query("username")
+
+	// Create a slice to store transaction objects in the desired format
+	response := make([]gin.H, 0)
+	tomorrow := time.Now().Add(24 * time.Hour).Format("02-01-2006")
+	for _, transaction := range transactions {
+		transactionDate := transaction.Date.Format("02-01-2006")
+		if transactionDate == tomorrow && (username == "" || transaction.User.Username == username) {
+			response = append(response, gin.H{
+				"id":       transaction.ID,
+				"name":     transaction.User.Username,
+				"phone":    transaction.User.Phone,
+				"date":     transactionDate,
+				"quantity": transaction.Quantity,
+				"status":   transaction.Status,
+			})
+		}
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -74,20 +101,20 @@ func GetTodayTransactions(c *gin.Context) {
 		return
 	}
 
-	// Mengambil query parameter "username" dari URL
+	// Get query parameter "username" from the URL
 	username := c.Query("username")
 
-	// Membuat slice untuk menyimpan objek transaksi dalam format yang diinginkan
+	// Create a slice to store transaction objects in the desired format
 	response := make([]gin.H, 0)
 	today := time.Now().Format("02-01-2006")
 	for _, transaction := range transactions {
-		createdAt := time.Unix(transaction.CreatedAt, 0).Format("02-01-2006")
-		if createdAt == today && (username == "" || transaction.User.Username == username) {
+		transactionDate := transaction.Date.Format("02-01-2006")
+		if transactionDate == today && (username == "" || transaction.User.Username == username) {
 			response = append(response, gin.H{
 				"id":       transaction.ID,
 				"name":     transaction.User.Username,
 				"phone":    transaction.User.Phone,
-				"date":     createdAt,
+				"date":     transactionDate,
 				"quantity": transaction.Quantity,
 				"status":   transaction.Status,
 			})
@@ -96,6 +123,3 @@ func GetTodayTransactions(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
-
-
-

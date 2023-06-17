@@ -135,7 +135,7 @@ func main() {
 	}
 
 	fmt.Println("Migration started")
-	roles := []string{"ADMIN_MADAM", "DRIVER", "USER"}
+	roles := []string{"ADMIN", "PETUGAS", "USER"}
 	vehicleType := []string{"SHIP", "TRUCK"}
 	GenerateRoles(roles)
 	GenerateVehicleType(vehicleType)
