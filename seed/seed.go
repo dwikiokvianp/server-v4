@@ -67,10 +67,11 @@ func GenerateFakeUsers(count, role int) {
 }
 
 func GenerateOil(num int) {
-	fake := faker.New()
+	oils := []string{"Bio Solar", "Premium", "Air"}
+
 	for i := 0; i < num; i++ {
 		oil := models.Oil{
-			Name: fake.Person().LastName(),
+			Name: oils[i%len(oils)],
 		}
 		err := config.DB.Create(&oil).Error
 		if err != nil {
@@ -78,6 +79,8 @@ func GenerateOil(num int) {
 		}
 	}
 }
+
+
 
 func generateVehicle(num, vehicleType int) {
 	fake := faker.New()
