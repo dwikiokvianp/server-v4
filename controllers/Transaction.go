@@ -119,6 +119,7 @@ func CreateTransactions(c *gin.Context) {
 		Quantity:  inputTransaction.Quantity,
 		OfficerId: inputTransaction.OfficerId,
 		Status:    "pending",
+		Date:      inputTransaction.Date,
 	}
 
 	if err := config.DB.Create(&transaction).Error; err != nil {
@@ -295,16 +296,17 @@ func GetTransactionByUserId(c *gin.Context) {
 	})
 }
 
-func GetTodayTransactions() ([]models.Transaction, error) {
-	var transactions []models.Transaction
 
+// GetTodayTransactions mengembalikan daftar transaksi hari ini
+func GetTodayTransactions() ([]models.Transaction, error) {
 	now := time.Now()
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, now.Location())
 
+	var transactions []models.Transaction
 	err := config.DB.
 		Preload("User").
-		Where("created_at BETWEEN ? AND ?", startOfToday.Unix(), endOfToday.Unix()).
+		Where("date BETWEEN ? AND ?", startOfToday, endOfToday).
 		Find(&transactions).Error
 
 	if err != nil {
@@ -314,3 +316,20 @@ func GetTodayTransactions() ([]models.Transaction, error) {
 	return transactions, nil
 }
 
+func GetTomorrowTransactions() ([]models.Transaction, error) {
+	now := time.Now()
+	startOfTomorrow := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).Add(24 * time.Hour)
+	endOfTomorrow := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, now.Location()).Add(24 * time.Hour)
+
+	var transactions []models.Transaction
+	err := config.DB.
+		Preload("User").
+		Where("date BETWEEN ? AND ?", startOfTomorrow.Format("2006-01-02T15:04:05Z07:00"), endOfTomorrow.Format("2006-01-02T15:04:05Z07:00")).
+		Find(&transactions).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return transactions, nil
+}

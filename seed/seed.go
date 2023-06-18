@@ -29,8 +29,8 @@ func GenerateRoles(roles []string) {
 	}
 }
 
-func GenerateVehicleType(vehicleType []string) {
-	for _, vehicleType := range vehicleType {
+func GenerateVehicleType(vehicleTypes []string) {
+	for _, vehicleType := range vehicleTypes {
 		vehicleType := models.VehicleType{
 			Name: vehicleType,
 		}
@@ -66,11 +66,10 @@ func GenerateFakeUsers(count, role int) {
 	}
 }
 
-func GenerateOil(num int) {
-	fake := faker.New()
-	for i := 0; i < num; i++ {
+func GenerateOil(oils []string) {
+	for _, oil := range oils {
 		oil := models.Oil{
-			Name: fake.Person().LastName(),
+			Name: oil,
 		}
 		err := config.DB.Create(&oil).Error
 		if err != nil {
@@ -135,11 +134,12 @@ func main() {
 	}
 
 	fmt.Println("Migration started")
-	roles := []string{"ADMIN_MADAM", "DRIVER", "USER"}
-	vehicleType := []string{"SHIP", "TRUCK"}
+	oils := []string{"Bio Solar", "Premium", "Air"}
+	roles := []string{"ADMIN", "PETUGAS", "USER"}
+	vehicleTypes := []string{"SHIP", "TRUCK"}
 	GenerateRoles(roles)
-	GenerateVehicleType(vehicleType)
-	GenerateOil(10)
+	GenerateVehicleType(vehicleTypes)
+	GenerateOil(oils)
 	generateFakeCompany(10)
 	generateFakeEmployee(10)
 
