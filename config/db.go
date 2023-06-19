@@ -25,6 +25,8 @@ func InitDatabase(url string) *gorm.DB {
 		&models.Transaction{},
 		&models.Officer{},
 		&models.Company{},
+		&models.HistoryOut{},
+		&models.HistoryIn{},
 		&models.Detail{},
 		&models.Proof{})
 	if migrateError != nil {

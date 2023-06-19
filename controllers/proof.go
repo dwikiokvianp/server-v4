@@ -150,6 +150,28 @@ func CreateProof(c *gin.Context) {
 		})
 		return
 	}
+	var historyOut models.HistoryOut
+
+	transactionIdInt, err = strconv.Atoi(transactionId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to convert transaction id to int",
+		})
+		return
+	}
+
+	historyOut.Date = time.Now()
+	historyOut.UserId = transaction.UserId
+	historyOut.OilId = transaction.OilId
+	historyOut.Quantity = transaction.Quantity
+	historyOut.TransactionId = transactionIdInt
+
+	if err := config.DB.Create(&historyOut).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to save history to database",
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Proof created successfully and transaction status updated to done",
