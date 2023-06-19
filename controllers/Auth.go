@@ -104,6 +104,7 @@ func LoginUser(c *gin.Context) {
 		TokenString: token,
 		Email:       user.Email,
 		Role:        user.Role.Role,
+		Name:        user.Username,
 	}
 
 	c.JSON(200, gin.H{"message": "Login success", "token": response})

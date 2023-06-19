@@ -39,4 +39,5 @@ type Token struct {
 	Role        string `json:"role"`
 	Email       string `json:"email"`
 	TokenString string `json:"access_token"`
+	Name        string `json:"name"`
 }
