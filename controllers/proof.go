@@ -173,6 +173,23 @@ func CreateProof(c *gin.Context) {
 		return
 	}
 
+	var oil models.Oil
+	if err := config.DB.First(&oil, transaction.OilId).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Oil not found",
+		})
+		return
+	}
+
+	oil.Quantity = oil.Quantity - transaction.Quantity
+
+	if err := config.DB.Save(&oil).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update oil quantity",
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Proof created successfully and transaction status updated to done",
 		"data":    proof,

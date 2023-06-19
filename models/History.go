@@ -17,4 +17,5 @@ type HistoryIn struct {
 	Date     time.Time `json:"date"`
 	Quantity int       `json:"quantity"`
 	OilId    int       `json:"oil_id"`
+	Oil      Oil
 }

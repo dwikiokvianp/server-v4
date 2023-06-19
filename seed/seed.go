@@ -69,7 +69,8 @@ func GenerateFakeUsers(count, role int) {
 func GenerateOil(oils []string) {
 	for _, oil := range oils {
 		oil := models.Oil{
-			Name: oil,
+			Name:     oil,
+			Quantity: 1_000_000_000,
 		}
 		err := config.DB.Create(&oil).Error
 		if err != nil {
@@ -123,6 +124,41 @@ func generateFakeEmployee(num int) {
 	}
 }
 
+type User struct {
+	Username  string
+	Password  string
+	Email     string
+	RoleId    int
+	CompanyID int
+	Phone     string
+}
+
+func generateSomeUser(data User) {
+	var admin models.User
+
+	var detail models.Detail
+
+	config.DB.Last(&detail)
+	detail.Id = detail.Id + 1
+
+	err := config.DB.Create(&detail).Error
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	admin.Username = data.Username
+	admin.Password = data.Password
+	admin.Email = data.Email
+	admin.RoleId = data.RoleId
+	admin.CompanyID = data.CompanyID
+	admin.Phone = data.Phone
+	admin.DetailId = detail.Id
+	err = config.DB.Create(&admin).Error
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func main() {
 	failedLoadEnv := godotenv.Load()
 	if failedLoadEnv != nil {
@@ -135,12 +171,14 @@ func main() {
 
 	fmt.Println("Migration started")
 	oils := []string{"MFO", "SOLAR"}
-	roles := []string{"ADMIN_PUSAT", "ADMIN_SALES", "PETUGAS", "USER"}
+	roles := []string{"ADMIN_PUSAT", "ADMIN_SALES", "OFFICER", "USER"}
 	vehicleTypes := []string{"SHIP", "TRUCK"}
 	GenerateRoles(roles)
 	GenerateVehicleType(vehicleTypes)
 	GenerateOil(oils)
+
 	generateFakeCompany(10)
+
 	generateFakeEmployee(10)
 
 	generateVehicle(10, 1)
@@ -149,5 +187,39 @@ func main() {
 	GenerateFakeUsers(10, 1)
 	GenerateFakeUsers(10, 2)
 	GenerateFakeUsers(10, 3)
+	generateSomeUser(User{
+		Username:  "admin",
+		Password:  "admin",
+		Email:     "admin@gmail.com",
+		RoleId:    1,
+		CompanyID: 1,
+		Phone:     "08123456789",
+	})
+	generateSomeUser(User{
+		Username:  "adminsales",
+		Password:  "adminsales",
+		Email:     "adminsales@gmail.com",
+		RoleId:    2,
+		CompanyID: 1,
+		Phone:     "08123456789",
+	})
+
+	generateSomeUser(User{
+		Username:  "petugas",
+		Password:  "petugas",
+		Email:     "petugas@gmail.com",
+		RoleId:    3,
+		CompanyID: 1,
+		Phone:     "08123456789",
+	})
+
+	generateSomeUser(User{
+		Username:  "dwiki",
+		Password:  "dwiki",
+		Email:     "dwikiokvianp1999@gmail.com",
+		RoleId:    4,
+		CompanyID: 1,
+		Phone:     "08123456789",
+	})
 	fmt.Println("Migration finished")
 }

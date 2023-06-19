@@ -9,5 +9,6 @@ func OilRoutes(c *gin.Engine) {
 	oilGroup := c.Group("/oil")
 	{
 		oilGroup.GET("", controllers.GetAllOil)
+		oilGroup.PUT("", controllers.UpdateOilQuantity)
 	}
 }
