@@ -7,17 +7,21 @@ import (
 )
 
 func GetAllCompany(c *gin.Context) {
-	var company models.Company
+	var company []models.Company
 
 	err := config.DB.Find(&company).Error
+
 	if err != nil {
-		c.JSON(500, gin.H{
-			"message": "Error when fetching all companies",
+		c.JSON(400, gin.H{
+			"message": "Error",
+			"error":   err,
 		})
 		return
 	}
 
 	c.JSON(200, gin.H{
-		"data": company,
+		"message": "Success",
+		"data":    company,
 	})
+
 }
