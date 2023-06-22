@@ -3,8 +3,8 @@ package routes
 import (
 	"net/http"
 	"server-v2/controllers"
-	"time"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,6 +19,7 @@ func TransactionRoutes(router *gin.Engine) {
 		transactionGroup.GET("/summary", GetTodayTransactionsHandler)
 		transactionGroup.GET("/tomorrow", GetTomorrowTransactions)
 		transactionGroup.GET("/today", GetTodayTransactions)
+		transactionGroup.GET("/v2/toda", controllers.GetTodayV2Transaction)
 	}
 }
 
@@ -129,10 +130,8 @@ func GetTodayTransactions(c *gin.Context) {
 		return
 	}
 
-	// Get query parameter "username" from the URL
 	username := c.Query("username")
 
-	// Create a slice to store transaction objects in the desired format
 	response := make([]gin.H, 0)
 	today := time.Now().Format("02-01-2006")
 	for _, transaction := range transactions[offset : offset+limit] {

@@ -11,10 +11,10 @@ import (
 	"gopkg.in/gomail.v2"
 	"log"
 	"os"
-	"time"
 	"server-v2/config"
 	"server-v2/models"
 	"strconv"
+	"time"
 )
 
 func LoadEnv() {
@@ -260,7 +260,7 @@ func GetAllTransactions(c *gin.Context) {
 }
 
 func GetByIdTransaction(c *gin.Context) {
-	var transaction  models.Transaction
+	var transaction models.Transaction
 	id := c.Param("id")
 	err := config.DB.Preload("Vehicle.VehicleType").Preload("User.Role").Preload("Officer").Preload("User.Detail").Preload("User.Company").Preload("Oil").Find(&transaction, id).Error
 	if err != nil {
@@ -295,7 +295,6 @@ func GetTransactionByUserId(c *gin.Context) {
 		"data": transaction,
 	})
 }
-
 
 // GetTodayTransactions mengembalikan daftar transaksi hari ini
 func GetTodayTransactions() ([]models.Transaction, error) {
@@ -332,4 +331,47 @@ func GetTomorrowTransactions() ([]models.Transaction, error) {
 	}
 
 	return transactions, nil
+}
+
+func GetTodayV2Transaction(c *gin.Context) {
+	var transaction []models.Transaction
+
+	today := time.Now().Format("2006-01-02")
+
+	name := c.Query("name")
+
+	if name != "" {
+		err := config.DB.
+			Preload("Vehicle.VehicleType").
+			Preload("User.Company").Preload("Oil").
+			Preload("User.Detail").
+			Joins("JOIN users ON users.id = transactions.user_id").
+			Where("users.username = ?", name).
+			Where("date = ?", today).Find(&transaction).Error
+		if err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+		}
+	} else {
+		err := config.DB.Preload("Vehicle.VehicleType").Preload("User.Company").Preload("Oil").
+			Preload("User.Detail").
+			Where("date = ?", today).Find(&transaction).Error
+		if err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+		}
+	}
+
+	if len(transaction) == 0 {
+		c.JSON(404, gin.H{
+			"message": "Transaction Today Not Found",
+		})
+	}
+
+	c.JSON(200, gin.H{
+		"data": transaction,
+	})
+
 }

@@ -17,39 +17,40 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	// Cek keberadaan nama pengguna
 	var existingUsername models.User
 	if err := config.DB.Where("username = ?", input.Username).First(&existingUsername).Error; err == nil {
 		c.JSON(400, gin.H{"error": "Username already exists"})
 		return
 	}
 
-	// Cek keberadaan alamat email
 	var existingEmail models.User
 	if err := config.DB.Where("email = ?", input.Email).First(&existingEmail).Error; err == nil {
 		c.JSON(400, gin.H{"error": "Email already exists"})
 		return
 	}
 
-	detail = models.Detail{
-		Balance: 0,
-		Credit:  0,
-	}
-	if err := config.DB.Create(&detail).Error; err != nil {
+	//get last id of detail
+	if err := config.DB.Last(&detail).Error; err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	//hash, err := utils.HashPassword(input.Password)
-	//if err != nil {
-	//	c.JSON(500, gin.H{"error": err.Error()})
-	//	return
-	//}
+	detailil := models.Detail{
+		Id:      detail.Id + 1,
+		Balance: 0,
+		Credit:  0,
+	}
+
+	if err := config.DB.Create(&detailil).Error; err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
 	user := models.User{
 		Username:  input.Username,
 		Email:     input.Email,
 		Password:  input.Password,
-		RoleId:    3,
+		RoleId:    4,
 		DetailId:  detail.Id,
 		CompanyID: input.CompanyID,
 	}
