@@ -6,23 +6,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/skip2/go-qrcode"
 	"gopkg.in/gomail.v2"
-	"log"
 	"os"
 	"server-v2/config"
 	"server-v2/models"
 	"strconv"
 	"time"
 )
-
-func LoadEnv() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-}
 
 func GenerateQRCode(data string) (string, error) {
 	qrFile := "qrcode.png"

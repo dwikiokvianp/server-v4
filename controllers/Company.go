@@ -25,25 +25,3 @@ func GetAllCompany(c *gin.Context) {
 	})
 
 }
-
-func CreateCompany(c *gin.Context) {
-	var company models.Company
-
-	if err := c.ShouldBindJSON(&company); err != nil {
-		c.JSON(400, gin.H{
-			"message": err,
-		})
-		return
-	}
-
-	if err := config.DB.FirstOrCreate(&company, company).Error; err != nil {
-		c.JSON(400, gin.H{
-			"message": "Error create company",
-		})
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"message": "Success created company",
-	})
-}
