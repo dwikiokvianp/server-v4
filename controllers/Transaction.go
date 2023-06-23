@@ -151,27 +151,27 @@ func CreateTransactions(c *gin.Context) {
 				background-color: #f2f2f2;
 				padding: 20px;
 			}
-			
+	
 			h1 {
 				color: #333333;
 				font-size: 24px;
 				font-weight: bold;
 				margin-bottom: 20px;
 			}
-			
+	
 			p {
 				color: #666666;
 				font-size: 16px;
 				line-height: 1.5;
 				margin-bottom: 10px;
 			}
-			
+	
 			.qr-code {
 				display: block;
 				text-align: center;
 				margin-bottom: 20px;
 			}
-			
+	
 			.qr-code img {
 				max-width: 200px;
 				height: auto;
@@ -183,13 +183,15 @@ func CreateTransactions(c *gin.Context) {
 	</body>
 	</html>
 	`
-	err = SendEmail(email, subject, body, qrFile)
-	if err != nil {
-		c.JSON(500, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+	go func() {
+		err = SendEmail(email, subject, body, qrFile)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+	}()
 
 	// Update transaction with QR code URL
 	transaction.QrCodeUrl = qrURL
