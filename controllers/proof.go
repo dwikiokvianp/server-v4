@@ -150,7 +150,6 @@ func CreateProof(c *gin.Context) {
 		})
 		return
 	}
-	var historyOut models.HistoryOut
 
 	transactionIdInt, err = strconv.Atoi(transactionId)
 	if err != nil {
@@ -160,18 +159,22 @@ func CreateProof(c *gin.Context) {
 		return
 	}
 
-	historyOut.Date = time.Now()
-	historyOut.UserId = transaction.UserId
-	historyOut.OilId = transaction.OilId
-	historyOut.Quantity = transaction.Quantity
-	historyOut.TransactionId = transactionIdInt
+	go func() {
+		var historyOut models.HistoryOut
 
-	if err := config.DB.Create(&historyOut).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to save history to database",
-		})
-		return
-	}
+		historyOut.Date = time.Now()
+		historyOut.UserId = transaction.UserId
+		historyOut.OilId = transaction.OilId
+		historyOut.Quantity = transaction.Quantity
+		historyOut.TransactionId = transactionIdInt
+
+		if err := config.DB.Create(&historyOut).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to save history to database",
+			})
+			return
+		}
+	}()
 
 	var oil models.Oil
 	if err := config.DB.First(&oil, transaction.OilId).Error; err != nil {

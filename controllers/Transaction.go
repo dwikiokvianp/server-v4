@@ -231,10 +231,7 @@ func GetAllTransactions(c *gin.Context) {
 
 	err := db.Offset(offset).Limit(pageSize).
 		Preload("Vehicle.VehicleType").
-		Preload("User.Role").
-		Preload("Officer").
-		Preload("User.Detail").
-		Preload("User.Company").
+		Preload("User").
 		Preload("Oil").
 		Find(&transactions).Error
 	if err != nil {
