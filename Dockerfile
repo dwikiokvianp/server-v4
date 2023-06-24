@@ -1,13 +1,17 @@
-FROM golang:alpine
-
-RUN apk update && apk add --no-cache git
+# Build Stage
+FROM golang AS build
 
 WORKDIR /app
-
 COPY . .
-
 RUN go mod tidy
-
 RUN go build -o binary
 
-ENTRYPOINT ["/app/binary"]
+# Runtime Stage
+FROM golang AS runtime
+
+WORKDIR /app
+COPY --from=build /app/binary .
+COPY --from=build /app/.env .
+EXPOSE 8080
+
+CMD ["./binary"]
