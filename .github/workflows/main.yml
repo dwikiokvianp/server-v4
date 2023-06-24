@@ -24,7 +24,7 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
+          fingerprint: ${{ secrets.FINGERPRINT }}
           key: ${{ secrets.KEY }}
           script: |
             echo "Deploying to ${{ secrets.HOST }}"
