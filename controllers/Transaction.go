@@ -2,89 +2,13 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
-	"github.com/skip2/go-qrcode"
-	"gopkg.in/gomail.v2"
-	"os"
 	"server-v2/config"
 	"server-v2/models"
+	"server-v2/utils"
 	"strconv"
 	"time"
 )
-
-func GenerateQRCode(data string) (string, error) {
-	qrFile := "qrcode.png"
-	err := qrcode.WriteFile(data, qrcode.Medium, 256, qrFile)
-	if err != nil {
-		return "", err
-	}
-	return qrFile, nil
-}
-func UploadToS3(file string, key string) (string, error) {
-	region := os.Getenv("AWS_REGION")
-	bucketName := os.Getenv("S3_BUCKET_NAME")
-	bucketURL := os.Getenv("S3_BUCKET_URL")
-
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(region),
-	})
-	if err != nil {
-		return "", err
-	}
-
-	svc := s3.New(sess)
-
-	f, err := os.Open(file)
-	if err != nil {
-		return "", err
-	}
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-
-		}
-	}(f)
-
-	_, err = svc.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(key),
-		Body:   f,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	url := bucketURL + key
-	return url, nil
-}
-
-func SendEmail(to, subject, body, attachment string) error {
-	from := os.Getenv("SMTP_USERNAME")
-	password := os.Getenv("SMTP_PASSWORD")
-	smtpHost := os.Getenv("SMTP_HOST")
-	smtpPort, _ := strconv.Atoi(os.Getenv("SMTP_PORT"))
-
-	m := gomail.NewMessage()
-	m.SetHeader("From", from)
-	m.SetHeader("To", to)
-	m.SetHeader("Subject", subject)
-	m.SetBody("text/html", body)
-
-	if attachment != "" {
-		m.Attach(attachment)
-	}
-
-	d := gomail.NewDialer(smtpHost, smtpPort, from, password)
-
-	err := d.DialAndSend(m)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 func CreateTransactions(c *gin.Context) {
 
@@ -153,7 +77,7 @@ func CreateTransactions(c *gin.Context) {
 	}()
 
 	qrData := strconv.Itoa(int(transaction.ID))
-	qrFile, err := GenerateQRCode(qrData)
+	qrFile, err := utils.GenerateQRCode(qrData)
 	if err != nil {
 		c.JSON(500, gin.H{
 			"error": err.Error(),
@@ -162,7 +86,7 @@ func CreateTransactions(c *gin.Context) {
 	}
 
 	key := fmt.Sprintf("qrcodes/%v", transaction.ID)
-	qrURL, err := UploadToS3(qrFile, key)
+	qrURL, err := utils.UploadToS3(qrFile, key)
 	if err != nil {
 		c.JSON(500, gin.H{
 			"error": err.Error(),
@@ -214,7 +138,7 @@ func CreateTransactions(c *gin.Context) {
 	</html>
 	`
 	go func() {
-		err = SendEmail(email, subject, body, qrFile)
+		err = utils.SendEmail(email, subject, body, qrFile)
 		if err != nil {
 			c.JSON(500, gin.H{
 				"error": err.Error(),
