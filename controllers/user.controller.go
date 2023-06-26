@@ -112,20 +112,22 @@ func GetAllUser(c *gin.Context) {
 	}
 
 	offset := (page - 1) * pageSize
-
-	err := db.Offset(offset).Limit(pageSize).Preload("Role").Preload("Detail").Find(&userList).Error
+	err := db.Model(&userList).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&userList).Error
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	page = (int(count) + pageSize - 1) / pageSize
+	maxPage := (int(count) + pageSize - 1) / pageSize
 
 	c.JSON(200, gin.H{
 		"data":     userList,
 		"page":     page,
 		"pageSize": pageSize,
-		"total":    page,
+		"total":    maxPage,
 	})
 }
 
