@@ -93,6 +93,15 @@ func CreateTransactions(c *gin.Context) {
 	}
 
 	userId := c.Param("id")
+	var transactionToday models.Transaction
+	if err := config.DB.Where("user_id = ? AND date = ?", userId, time.Now().Format("2006-01-02")).First(&transactionToday).Error; err != nil {
+		fmt.Println("record not found")
+	} else {
+		c.JSON(400, gin.H{
+			"message": "You have already made a transaction today",
+		})
+		return
+	}
 
 	intUserId, err := strconv.Atoi(userId)
 	if err != nil {
@@ -235,6 +244,8 @@ func GetAllTransactions(c *gin.Context) {
 		Preload("Vehicle.VehicleType").
 		Preload("User").
 		Preload("Oil").
+		Preload("City").
+		Preload("Province").
 		Find(&transactions).Error
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -288,7 +299,6 @@ func GetTransactionByUserId(c *gin.Context) {
 	})
 }
 
-// GetTodayTransactions mengembalikan daftar transaksi hari ini
 func GetTodayTransactions() ([]models.Transaction, error) {
 	now := time.Now()
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
