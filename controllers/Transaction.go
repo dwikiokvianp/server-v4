@@ -211,7 +211,7 @@ func CreateTransactions(c *gin.Context) {
 func GetAllTransactions(c *gin.Context) {
 	var (
 		transactions []models.Transaction
-		pageSize     = 5
+		pageSize     = 10
 		page         = 1
 	)
 
