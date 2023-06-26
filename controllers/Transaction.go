@@ -103,14 +103,16 @@ func CreateTransactions(c *gin.Context) {
 	}
 
 	transaction := models.Transaction{
-		UserId:    intUserId,
-		Email:     inputTransaction.Email,
-		VehicleId: inputTransaction.VehicleId,
-		OilId:     inputTransaction.OilId,
-		Quantity:  inputTransaction.Quantity,
-		OfficerId: inputTransaction.OfficerId,
-		Status:    "pending",
-		Date:      inputTransaction.Date,
+		UserId:     intUserId,
+		Email:      inputTransaction.Email,
+		VehicleId:  inputTransaction.VehicleId,
+		OilId:      inputTransaction.OilId,
+		Quantity:   inputTransaction.Quantity,
+		OfficerId:  inputTransaction.OfficerId,
+		Status:     "pending",
+		Date:       inputTransaction.Date,
+		CityId:     inputTransaction.CityId,
+		ProvinceId: inputTransaction.ProvinceId,
 	}
 
 	if err := config.DB.Create(&transaction).Error; err != nil {

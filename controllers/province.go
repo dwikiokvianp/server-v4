@@ -14,18 +14,22 @@ func FindProvince(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, province)
+	c.JSON(200, gin.H{
+		"data": province,
+	})
 
 }
 
 func FindProvinceById(c *gin.Context) {
 	var province models.Province
 
-	if err := config.DB.Where("id = ?", c.Param("id")).First(&province).Error; err != nil {
+	if err := config.DB.Preload("City").Where("id = ?", c.Param("id")).First(&province).Error; err != nil {
 		c.JSON(404, gin.H{"message": "Not found"})
 		return
 	}
 
-	c.JSON(200, province)
+	c.JSON(200, gin.H{
+		"data": province,
+	})
 
 }

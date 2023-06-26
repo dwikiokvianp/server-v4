@@ -18,6 +18,10 @@ type Transaction struct {
 	OfficerId  int       `gorm:"not null" json:"officer_id"`
 	Officer    Officer   `gorm:"foreignkey:OfficerId"`
 	Status     string    `gorm:"not null" json:"status"`
+	ProvinceId int       `gorm:"not null" json:"province_id"`
+	Province   Province  `gorm:"foreignkey:ProvinceId"`
+	CityId     int       `gorm:"not null" json:"city_id"`
+	City       City      `gorm:"foreignkey:CityId"`
 	Date       time.Time `json:"date"`
 }
 
@@ -30,4 +34,6 @@ type TransactionInput struct {
 	OfficerId  int       `gorm:"not null" json:"officer_id"`
 	QrCodeUrl  string    `json:"qr_code_url"`
 	Date       time.Time `json:"date"`
+	CityId     int       `gorm:"not null" json:"city_id"`
+	ProvinceId int       `gorm:"not null" json:"province_id"`
 }
