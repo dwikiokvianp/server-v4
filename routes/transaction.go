@@ -47,12 +47,6 @@ func GetTodayTransactionsHandler(c *gin.Context) {
 		} else if transaction.Date.After(endOfToday) && transaction.Date.Before(startOfTomorrow) {
 			orderTomorrow++
 		}
-
-		if transaction.Quantity > 0 {
-			oilIn += transaction.Quantity
-		} else {
-			oilOut += transaction.Quantity
-		}
 	}
 
 	response := gin.H{
@@ -97,12 +91,11 @@ func GetTomorrowTransactions(c *gin.Context) {
 		transactionDate := transaction.Date.Format("02-01-2006")
 		if transactionDate == tomorrow && (username == "" || transaction.User.Username == username) {
 			response = append(response, gin.H{
-				"id":       transaction.ID,
-				"name":     transaction.User.Username,
-				"phone":    transaction.User.Phone,
-				"date":     transactionDate,
-				"quantity": transaction.Quantity,
-				"status":   transaction.Status,
+				"id":     transaction.ID,
+				"name":   transaction.User.Username,
+				"phone":  transaction.User.Phone,
+				"date":   transactionDate,
+				"status": transaction.Status,
 			})
 		}
 	}
@@ -138,12 +131,11 @@ func GetTodayTransactions(c *gin.Context) {
 		transactionDate := transaction.Date.Format("02-01-2006")
 		if transactionDate == today && (username == "" || transaction.User.Username == username) {
 			response = append(response, gin.H{
-				"id":       transaction.ID,
-				"name":     transaction.User.Username,
-				"phone":    transaction.User.Phone,
-				"date":     transactionDate,
-				"quantity": transaction.Quantity,
-				"status":   transaction.Status,
+				"id":     transaction.ID,
+				"name":   transaction.User.Username,
+				"phone":  transaction.User.Phone,
+				"date":   transactionDate,
+				"status": transaction.Status,
 			})
 		}
 	}

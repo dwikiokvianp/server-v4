@@ -164,8 +164,6 @@ func CreateProof(c *gin.Context) {
 
 		historyOut.Date = time.Now()
 		historyOut.UserId = transaction.UserId
-		historyOut.OilId = transaction.OilId
-		historyOut.Quantity = transaction.Quantity
 		historyOut.TransactionId = transactionIdInt
 
 		if err := config.DB.Create(&historyOut).Error; err != nil {
@@ -176,22 +174,22 @@ func CreateProof(c *gin.Context) {
 		}
 	}()
 
-	var oil models.Oil
-	if err := config.DB.First(&oil, transaction.OilId).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Oil not found",
-		})
-		return
-	}
+	//var oil models.Oil
+	//if err := config.DB.First(&oil, transaction.OilId).Error; err != nil {
+	//	c.JSON(http.StatusNotFound, gin.H{
+	//		"error": "Oil not found",
+	//	})
+	//	return
+	//}
+	//
+	//oil.Quantity = oil.Quantity - transaction.Quantity
 
-	oil.Quantity = oil.Quantity - transaction.Quantity
-
-	if err := config.DB.Save(&oil).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to update oil quantity",
-		})
-		return
-	}
+	//if err := config.DB.Save(&oil).Error; err != nil {
+	//	c.JSON(http.StatusInternalServerError, gin.H{
+	//		"error": "Failed to update oil quantity",
+	//	})
+	//	return
+	//}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Proof created successfully and transaction status updated to done",

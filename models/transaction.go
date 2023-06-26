@@ -10,11 +10,8 @@ type Transaction struct {
 	QrCodeUrl  string    `gorm:"not null" json:"qr_code_url"`
 	VehicleId  int       `gorm:"not null" json:"vehicle_id"`
 	Vehicle    Vehicle   `gorm:"foreignkey:VehicleId"`
-	OilId      int       `gorm:"not null" json:"oil_id"`
-	Oil        Oil       `gorm:"foreignkey:OilId"`
 	CreatedAt  int64     `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt  int64     `gorm:"autoUpdateTime" json:"updated_at"`
-	Quantity   int       `gorm:"not null" json:"quantity"`
 	OfficerId  int       `gorm:"not null" json:"officer_id"`
 	Officer    Officer   `gorm:"foreignkey:OfficerId"`
 	Status     string    `gorm:"not null" json:"status"`
@@ -26,14 +23,24 @@ type Transaction struct {
 }
 
 type TransactionInput struct {
-	UserId     int       `gorm:"not null" json:"user_id"`
-	VehicleId  int       `gorm:"not null" json:"vehicle_id"`
-	OilId      int       `gorm:"not null" json:"oil_id"`
-	Email      string    `gorm:"not null" json:"email"`
-	Quantity   int       `gorm:"not null" json:"quantity"`
-	OfficerId  int       `gorm:"not null" json:"officer_id"`
-	QrCodeUrl  string    `json:"qr_code_url"`
-	Date       time.Time `json:"date"`
-	CityId     int       `gorm:"not null" json:"city_id"`
-	ProvinceId int       `gorm:"not null" json:"province_id"`
+	UserId            int                      `gorm:"not null" json:"user_id"`
+	VehicleId         int                      `gorm:"not null" json:"vehicle_id"`
+	OilId             int                      `gorm:"not null" json:"oil_id"`
+	Email             string                   `gorm:"not null" json:"email"`
+	OfficerId         int                      `gorm:"not null" json:"officer_id"`
+	QrCodeUrl         string                   `json:"qr_code_url"`
+	Date              time.Time                `json:"date"`
+	CityId            int                      `gorm:"not null" json:"city_id"`
+	ProvinceId        int                      `gorm:"not null" json:"province_id"`
+	TransactionDetail []TransactionDetailInput `json:"transaction_detail"`
+}
+
+type TransactionDetailInput struct {
+	OilID         int64 `json:"oil_id" binding:"required"`
+	Quantity      int64 `json:"quantity" binding:"required"`
+	TransactionId int64 `json:"transaction_id" binding:"required"`
+}
+
+type TransactionDetailBatchInput struct {
+	Detail []TransactionDetailInput `json:"transaction_detail"`
 }

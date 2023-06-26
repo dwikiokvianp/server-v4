@@ -106,8 +106,6 @@ func CreateTransactions(c *gin.Context) {
 		UserId:     intUserId,
 		Email:      inputTransaction.Email,
 		VehicleId:  inputTransaction.VehicleId,
-		OilId:      inputTransaction.OilId,
-		Quantity:   inputTransaction.Quantity,
 		OfficerId:  inputTransaction.OfficerId,
 		Status:     "pending",
 		Date:       inputTransaction.Date,
@@ -122,7 +120,31 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	// Generate QR code
+	var transactionDetails []models.TransactionDetail
+
+	if inputTransaction.TransactionDetail == nil {
+		c.JSON(400, gin.H{
+			"message": "transaction detail is required",
+		})
+		return
+	}
+
+	for _, detail := range inputTransaction.TransactionDetail {
+		transactionDetail := models.TransactionDetail{
+			OilID:         detail.OilID,
+			Quantity:      detail.Quantity,
+			TransactionID: int64(transaction.ID),
+		}
+		transactionDetails = append(transactionDetails, transactionDetail)
+	}
+
+	if err := config.DB.Create(&transactionDetails).Error; err != nil {
+		c.JSON(500, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
 	qrData := strconv.Itoa(int(transaction.ID))
 	qrFile, err := GenerateQRCode(qrData)
 	if err != nil {
@@ -233,7 +255,6 @@ func GetAllTransactions(c *gin.Context) {
 	err := db.Offset(offset).Limit(pageSize).
 		Preload("Vehicle.VehicleType").
 		Preload("User").
-		Preload("Oil").
 		Preload("City").
 		Preload("Province").
 		Find(&transactions).Error
