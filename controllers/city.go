@@ -7,7 +7,7 @@ import (
 )
 
 func FindCity(c *gin.Context) {
-	city := models.City{}
+	var city []models.City
 
 	if err := config.DB.Find(&city).Error; err != nil {
 		c.JSON(400, gin.H{

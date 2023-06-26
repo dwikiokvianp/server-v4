@@ -9,7 +9,7 @@ func ProvinceRoutes(c *gin.Engine) {
 
 	provinceGroup := c.Group("/province")
 	{
-		provinceGroup.GET("/", controllers.FindProvince)
+		provinceGroup.GET("", controllers.FindProvince)
 		provinceGroup.GET("/:id", controllers.FindProvinceById)
 	}
 
