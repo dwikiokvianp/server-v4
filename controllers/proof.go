@@ -22,7 +22,12 @@ func uploadImageToS3(sess *session.Session, bucket string, fileHeader *multipart
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer func(file multipart.File) {
+		err := file.Close()
+		if err != nil {
+
+		}
+	}(file)
 
 	// Generate unique file name
 	fileExt := filepath.Ext(fileHeader.Filename)

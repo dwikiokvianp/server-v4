@@ -41,7 +41,12 @@ func UploadToS3(file string, key string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+
+		}
+	}(f)
 
 	_, err = svc.PutObject(&s3.PutObjectInput{
 		Bucket: aws.String(bucketName),
