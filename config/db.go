@@ -23,6 +23,7 @@ func InitDatabase(url string) *gorm.DB {
 		&models.VehicleType{},
 		&models.Vehicle{},
 		&models.Transaction{},
+		&models.TransactionDetail{},
 		&models.Officer{},
 		&models.Company{},
 		&models.HistoryOut{},
