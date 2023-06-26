@@ -160,7 +160,7 @@ func generateSomeUser(data User) {
 }
 
 func main() {
-	failedLoadEnv := godotenv.Load()
+	failedLoadEnv := godotenv.Load("./.env.local")
 	if failedLoadEnv != nil {
 		fmt.Println("Error loading .env file")
 	}
