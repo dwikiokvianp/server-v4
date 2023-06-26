@@ -134,21 +134,23 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	for _, detail := range inputTransaction.TransactionDetail {
-		transactionDetail := models.TransactionDetail{
-			OilID:         detail.OilID,
-			Quantity:      detail.Quantity,
-			TransactionID: int64(transaction.ID),
+	go func() {
+		for _, detail := range inputTransaction.TransactionDetail {
+			transactionDetail := models.TransactionDetail{
+				OilID:         detail.OilID,
+				Quantity:      detail.Quantity,
+				TransactionID: int64(transaction.ID),
+			}
+			transactionDetails = append(transactionDetails, transactionDetail)
 		}
-		transactionDetails = append(transactionDetails, transactionDetail)
-	}
 
-	if err := config.DB.Create(&transactionDetails).Error; err != nil {
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
+		if err := config.DB.Create(&transactionDetails).Error; err != nil {
+			c.JSON(500, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
+	}()
 
 	qrData := strconv.Itoa(int(transaction.ID))
 	qrFile, err := GenerateQRCode(qrData)

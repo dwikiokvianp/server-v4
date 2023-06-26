@@ -23,9 +23,7 @@ type Transaction struct {
 }
 
 type TransactionInput struct {
-	UserId            int                      `gorm:"not null" json:"user_id"`
 	VehicleId         int                      `gorm:"not null" json:"vehicle_id"`
-	OilId             int                      `gorm:"not null" json:"oil_id"`
 	Email             string                   `gorm:"not null" json:"email"`
 	OfficerId         int                      `gorm:"not null" json:"officer_id"`
 	QrCodeUrl         string                   `json:"qr_code_url"`
