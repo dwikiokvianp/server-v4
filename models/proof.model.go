@@ -12,5 +12,5 @@ type Proof struct {
 	PhotoTangkiURL string    `json:"photo_tangki_url"`
 	CreatedAt      time.Time `json:"created_at"`
 	TransactionID  int       `json:"transaction_id"`
-	Transaction    Transaction 
+	Transaction    Transaction
 }

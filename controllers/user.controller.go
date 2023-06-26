@@ -47,10 +47,8 @@ func UpdateBalanceAndCredit(c *gin.Context) {
 		return
 	}
 
-	// Mulai transaksi basis data
 	tx := config.DB.Begin()
 
-	// Mendapatkan data pengguna dari database berdasarkan user_id
 	var detail models.Detail
 	if err := tx.Where("id = ?", input.UserId).First(&detail).Error; err != nil {
 		tx.Rollback()
@@ -58,21 +56,18 @@ func UpdateBalanceAndCredit(c *gin.Context) {
 		return
 	}
 
-	// Memeriksa apakah jumlah kredit melebihi batas kredit yang diizinkan
 	if input.Credit > detail.Credit {
 		tx.Rollback()
 		c.JSON(400, gin.H{"error": "Credit amount exceeds the allowed credit limit"})
 		return
 	}
 
-	// Memperbarui nilai balance dan credit pada tabel Detail menggunakan transaksi
 	if err := tx.Model(&models.Detail{}).Where("id = ?", input.UserId).Updates(models.Detail{Balance: input.Balance, Credit: input.Credit}).Error; err != nil {
 		tx.Rollback()
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Commit transaksi jika tidak ada kesalahan
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		c.JSON(500, gin.H{"error": err.Error()})
