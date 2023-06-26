@@ -93,15 +93,6 @@ func CreateTransactions(c *gin.Context) {
 	}
 
 	userId := c.Param("id")
-	var transactionToday models.Transaction
-	if err := config.DB.Where("user_id = ? AND date = ?", userId, time.Now().Format("2006-01-02")).First(&transactionToday).Error; err != nil {
-		fmt.Println("record not found")
-	} else {
-		c.JSON(400, gin.H{
-			"message": "You have already made a transaction today",
-		})
-		return
-	}
 
 	intUserId, err := strconv.Atoi(userId)
 	if err != nil {
@@ -141,8 +132,7 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	// Upload QR code to S3
-	key := "qrcodes/" + qrFile
+	key := fmt.Sprintf("qrcodes/%s", qrFile)
 	qrURL, err := UploadToS3(qrFile, key)
 	if err != nil {
 		c.JSON(500, gin.H{
