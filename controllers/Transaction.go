@@ -132,7 +132,7 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	key := fmt.Sprintf("qrcodes/%s", qrFile)
+	key := fmt.Sprintf("qrcodes/%v", transaction.ID)
 	qrURL, err := UploadToS3(qrFile, key)
 	if err != nil {
 		c.JSON(500, gin.H{
