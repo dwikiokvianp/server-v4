@@ -37,6 +37,7 @@ type TransactionDetailInput struct {
 	OilID         int64 `json:"oil_id" binding:"required"`
 	Quantity      int64 `json:"quantity" binding:"required"`
 	TransactionId int64 `json:"transaction_id" binding:"required"`
+	StorageId     int64 `json:"storage_id" binding:"required"`
 }
 
 type TransactionDetailBatchInput struct {

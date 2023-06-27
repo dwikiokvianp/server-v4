@@ -64,6 +64,7 @@ func CreateTransactions(c *gin.Context) {
 				OilID:         detail.OilID,
 				Quantity:      detail.Quantity,
 				TransactionID: int64(transaction.ID),
+				StorageId:     detail.StorageId,
 			}
 			transactionDetails = append(transactionDetails, transactionDetail)
 		}
