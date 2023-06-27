@@ -18,6 +18,8 @@ func InitDatabase(url string) *gorm.DB {
 
 	migrateError := db.AutoMigrate(
 		&models.Role{},
+		&models.DeliveryOrder{},
+		&models.TravelOrder{},
 		&models.User{},
 		&models.Oil{},
 		&models.VehicleType{},
