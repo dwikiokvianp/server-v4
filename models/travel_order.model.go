@@ -12,7 +12,7 @@ type TravelOrder struct {
 type TravelDeliveryInput struct {
 	OfficerID         int64  `gorm:"not null" json:"officer_id" binding:"required"`
 	PickupLocation    string `gorm:"not null" json:"pickup_location" binding:"required"`
-	DepartureDate     string `json:"departure" binding:"required"`
+	DepartureDate     string `gorm:"not null" json:"departure_date" `
 	Message           string `gorm:"not null" json:"message" binding:"required"`
 	Status            string `gorm:"not null" json:"status" binding:"required"`
 	Recipient         string `json:"recipient" binding:"required"`

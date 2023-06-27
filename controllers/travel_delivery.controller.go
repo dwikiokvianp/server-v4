@@ -16,7 +16,7 @@ func CreateTravelOrder(c *gin.Context) {
 		return
 	}
 	travelOrder := models.TravelOrder{
-		OfficerID:      0,
+		OfficerID:      travelDeliveryInput.OfficerID,
 		PickupLocation: travelDeliveryInput.PickupLocation,
 		DepartureDate:  travelDeliveryInput.DepartureDate,
 		Message:        travelDeliveryInput.Message,
@@ -42,12 +42,12 @@ func CreateTravelOrder(c *gin.Context) {
 
 	if err := config.DB.Create(&deliveryOrder).Error; err != nil {
 		c.JSON(400, gin.H{
-			"error": "Failed to create delivery order",
+			"error": err.Error(),
 		})
 		return
 	}
 
 	c.JSON(200, gin.H{
-		"message": "Travel delivery and controller is already created",
+		"message": "Travel delivery and controller is successfully created",
 	})
 }

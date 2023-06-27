@@ -9,7 +9,7 @@ import (
 func FindCity(c *gin.Context) {
 	var city []models.City
 
-	if err := config.DB.Find(&city).Error; err != nil {
+	if err := config.DB.Select("name", "id", "province_id").Find(&city).Error; err != nil {
 		c.JSON(400, gin.H{
 			"message": "Error",
 			"error":   err,
