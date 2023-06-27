@@ -31,6 +31,7 @@ func InitDatabase(url string) *gorm.DB {
 		&models.HistoryOut{},
 		&models.HistoryIn{},
 		&models.Detail{},
+		&models.Storage{},
 		&models.Proof{})
 	if migrateError != nil {
 		log.Fatalln(err)
