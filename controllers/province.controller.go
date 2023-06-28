@@ -9,8 +9,10 @@ import (
 func FindProvince(c *gin.Context) {
 	var province []models.Province
 
-	if err := config.DB.Preload("City").Find(&province).Error; err != nil {
-		c.JSON(404, gin.H{"message": "Not found"})
+	if err := config.DB.
+		Preload("City").
+		Find(&province).Error; err != nil {
+		c.JSON(404, gin.H{"message": "Failed to find province"})
 		return
 	}
 
@@ -23,7 +25,10 @@ func FindProvince(c *gin.Context) {
 func FindProvinceById(c *gin.Context) {
 	var province models.Province
 
-	if err := config.DB.Preload("City").Where("id = ?", c.Param("id")).First(&province).Error; err != nil {
+	if err := config.DB.
+		Preload("City").
+		Where("id = ?", c.Param("id")).
+		First(&province).Error; err != nil {
 		c.JSON(404, gin.H{"message": "Not found"})
 		return
 	}
