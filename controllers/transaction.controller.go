@@ -185,10 +185,10 @@ func GetAllTransactions(c *gin.Context) {
 	offset := (page - 1) * pageSize
 
 	err := db.Offset(offset).Limit(pageSize).
-		Preload("Vehicle.VehicleType").
-		Preload("User").
-		Preload("City").
-		Preload("Province").
+		Joins("Vehicle.VehicleType").
+		Joins("User").
+		Joins("City").
+		Joins("Province").
 		Find(&transactions).Error
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -208,11 +208,18 @@ func GetAllTransactions(c *gin.Context) {
 func GetByIdTransaction(c *gin.Context) {
 	var transaction models.Transaction
 	id := c.Param("id")
-	err := config.DB.Preload("Vehicle.VehicleType").Preload("User.Role").Preload("Officer").Preload("User.Detail").Preload("User.Company").Preload("Oil").Find(&transaction, id).Error
+	err := config.DB.
+		Joins("Vehicle.VehicleType").
+		Joins("User.Role").
+		Joins("Officer").
+		Joins("User.Detail").
+		Joins("User.Company").
+		Find(&transaction, id).Error
 	if err != nil {
 		c.JSON(400, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	c.JSON(200, gin.H{
 		"data": transaction,

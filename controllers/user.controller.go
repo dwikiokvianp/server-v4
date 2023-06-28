@@ -135,7 +135,11 @@ func GetUserById(c *gin.Context) {
 	var user models.User
 	id := c.Param("id")
 
-	err := config.DB.Where("id = ?", id).Preload("Role").Preload("Detail").Preload("Company").First(&user).Error
+	err := config.DB.Where("users.id = ?", id).
+		Joins("Role").
+		Joins("Detail").
+		Joins("Company").
+		First(&user).Error
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
