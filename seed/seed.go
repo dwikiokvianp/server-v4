@@ -209,7 +209,7 @@ func main() {
 	fmt.Println("Migration started")
 
 	oils := []string{"MFO", "SOLAR"}
-	roles := []string{"ADMIN_PUSAT", "ADMIN_SALES", "OFFICER", "USER"}
+	roles := []string{"ADMIN_PUSAT", "ADMIN_SALES", "OFFICER", "USER", "DRIVER"}
 	vehicleTypes := []string{"SHIP", "TRUCK"}
 	GenerateRoles(roles)
 	GenerateVehicleType(vehicleTypes)
@@ -225,6 +225,8 @@ func main() {
 	GenerateFakeUsers(100, 1)
 	GenerateFakeUsers(100, 2)
 	GenerateFakeUsers(100, 3)
+	GenerateFakeUsers(100, 4)
+	GenerateFakeUsers(100, 5)
 	generateSomeUser(User{
 		Username:  "admin",
 		Password:  "admin",
