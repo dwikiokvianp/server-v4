@@ -9,10 +9,16 @@ import (
 func GetOfficer(c *gin.Context) {
 	var officer []models.Officer
 
-	err := config.DB.Find(&officer).Error
+	err := config.DB.Select("id", "username", "email").Find(&officer).Error
 	if err != nil {
 		c.JSON(404, gin.H{
-			"msg": "Not Found",
+			"message": "Cannot load Officer",
+		})
+	}
+
+	if len(officer) <= 0 {
+		c.JSON(404, gin.H{
+			"message": "Officer Not Found",
 		})
 	}
 
@@ -26,10 +32,16 @@ func GetOfficerById(c *gin.Context) {
 	var officer models.Officer
 	id := c.Param("id")
 
-	err := config.DB.Where("id = ?", id).First(&officer).Error
+	err := config.DB.Select("id", "username").Where("id = ?", id).First(&officer).Error
 	if err != nil {
 		c.JSON(404, gin.H{
-			"msg": "Not Found",
+			"message": "Internal Server Error",
+		})
+	}
+
+	if officer == (models.Officer{}) {
+		c.JSON(404, gin.H{
+			"message": "Cannot find Officer",
 		})
 	}
 
