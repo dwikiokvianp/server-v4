@@ -68,11 +68,23 @@ func GenerateFakeUsers(count, role int) {
 
 func GenerateOil(oils []string) {
 	for _, oil := range oils {
-		oil := models.Oil{
-			Name:     oil,
-			Quantity: 1_000_000_000,
+
+		storage := models.Storage{
+			Name:         fmt.Sprintf("%s Storage", oil),
+			QuantityTank: 80_000,
 		}
-		err := config.DB.Create(&oil).Error
+
+		err := config.DB.Create(&storage).Error
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		oil := models.Oil{
+			Name:      oil,
+			StorageId: int(storage.ID),
+		}
+
+		err = config.DB.Create(&oil).Error
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -135,6 +147,16 @@ func GenerateStorage(num int) {
 		if err != nil {
 			fmt.Println(err)
 		}
+
+		oil := models.Oil{
+			Name:      "MFO",
+			StorageId: int(storage.ID),
+		}
+		err = config.DB.Create(&oil).Error
+		if err != nil {
+			fmt.Println(err)
+		}
+
 	}
 
 }
@@ -192,7 +214,6 @@ func main() {
 	GenerateRoles(roles)
 	GenerateVehicleType(vehicleTypes)
 	GenerateOil(oils)
-	GenerateStorage(4)
 
 	generateFakeCompany(10)
 
