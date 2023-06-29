@@ -136,31 +136,6 @@ func generateFakeEmployee(num int) {
 	}
 }
 
-func GenerateStorage(num int) {
-	fake := faker.New()
-	for i := 0; i < num; i++ {
-		storage := models.Storage{
-			Name:         fake.Company().Name(),
-			QuantityTank: 80_000,
-		}
-		err := config.DB.Create(&storage).Error
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		oil := models.Oil{
-			Name:      "MFO",
-			StorageId: int(storage.ID),
-		}
-		err = config.DB.Create(&oil).Error
-		if err != nil {
-			fmt.Println(err)
-		}
-
-	}
-
-}
-
 type User struct {
 	Username  string
 	Password  string
