@@ -55,7 +55,7 @@ func GenerateFakeUsers(count, role int) {
 				Email:     fake.Internet().Email(),
 				RoleId:    role,
 				DetailId:  detail.Id,
-				CompanyID: count,
+				CompanyID: 2,
 				Phone:     fake.Phone().Number(),
 			}
 			err := config.DB.Create(&user).Error
@@ -201,9 +201,9 @@ func main() {
 	generateVehicle(10, 1)
 	generateVehicle(10, 2)
 
-	GenerateFakeUsers(10, 1)
-	GenerateFakeUsers(10, 2)
-	GenerateFakeUsers(10, 3)
+	GenerateFakeUsers(100, 1)
+	GenerateFakeUsers(100, 2)
+	GenerateFakeUsers(100, 3)
 	generateSomeUser(User{
 		Username:  "admin",
 		Password:  "admin",
