@@ -29,14 +29,11 @@ func uploadImageToS3(sess *session.Session, bucket string, fileHeader *multipart
 		}
 	}(file)
 
-	// Generate unique file name
 	fileExt := filepath.Ext(fileHeader.Filename)
 	fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), fileExt)
 
-	// Initialize S3 uploader
 	uploader := s3manager.NewUploader(sess)
 
-	// Upload file to S3
 	_, err = uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(fileName),
@@ -46,7 +43,6 @@ func uploadImageToS3(sess *session.Session, bucket string, fileHeader *multipart
 		return "", err
 	}
 
-	// Generate image URL from S3 bucket URL
 	s3BucketURL := os.Getenv("S3_BUCKET_URL")
 	fileURL := fmt.Sprintf("%s%s", s3BucketURL, fileName)
 
@@ -89,7 +85,6 @@ func CreateProof(c *gin.Context) {
 		Description:   description,
 	}
 
-	// Initialize AWS session
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(os.Getenv("AWS_REGION")),
 	})
@@ -100,7 +95,6 @@ func CreateProof(c *gin.Context) {
 		return
 	}
 
-	// Upload KTP image to S3
 	photoKTPURL, err := uploadImageToS3(sess, os.Getenv("S3_BUCKET_NAME"), fileKTP)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -110,7 +104,6 @@ func CreateProof(c *gin.Context) {
 	}
 	proof.PhotoKTPURL = photoKTPURL
 
-	// Upload orang image to S3
 	photoOrangURL, err := uploadImageToS3(sess, os.Getenv("S3_BUCKET_NAME"), fileOrang)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -120,7 +113,6 @@ func CreateProof(c *gin.Context) {
 	}
 	proof.PhotoOrangURL = photoOrangURL
 
-	// Upload tangki image to S3
 	photoTangkiURL, err := uploadImageToS3(sess, os.Getenv("S3_BUCKET_NAME"), fileTangki)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -130,7 +122,6 @@ func CreateProof(c *gin.Context) {
 	}
 	proof.PhotoTangkiURL = photoTangkiURL
 
-	// Save proof to database
 	err = config.DB.Create(&proof).Error
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -178,23 +169,6 @@ func CreateProof(c *gin.Context) {
 			return
 		}
 	}()
-
-	//var oil models.Oil
-	//if err := config.DB.First(&oil, transaction.OilId).Error; err != nil {
-	//	c.JSON(http.StatusNotFound, gin.H{
-	//		"error": "Oil not found",
-	//	})
-	//	return
-	//}
-	//
-	//oil.Quantity = oil.Quantity - transaction.Quantity
-
-	//if err := config.DB.Save(&oil).Error; err != nil {
-	//	c.JSON(http.StatusInternalServerError, gin.H{
-	//		"error": "Failed to update oil quantity",
-	//	})
-	//	return
-	//}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Proof created successfully and transaction status updated to done",

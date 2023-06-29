@@ -148,7 +148,6 @@ func CreateTransactions(c *gin.Context) {
 		}
 	}()
 
-	// Update transaction with QR code URL
 	transaction.QrCodeUrl = qrURL
 	if err := config.DB.Save(&transaction).Error; err != nil {
 		c.JSON(500, gin.H{
