@@ -31,6 +31,7 @@ type TransactionInput struct {
 	CityId            int                      `gorm:"not null" json:"city_id"`
 	ProvinceId        int                      `gorm:"not null" json:"province_id"`
 	TransactionDetail []TransactionDetailInput `json:"transaction_detail"`
+	StorageId         int                      `json:"storage_id"`
 }
 
 type TransactionDetailInput struct {
