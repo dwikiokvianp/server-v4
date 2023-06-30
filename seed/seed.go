@@ -236,5 +236,13 @@ func main() {
 		CompanyID: 1,
 		Phone:     "08123456789",
 	})
+	generateSomeUser(User{
+		Username:  "driver",
+		Password:  "driver",
+		Email:     "driver@gmail.com",
+		RoleId:    5,
+		CompanyID: 1,
+		Phone:     "08123456789",
+	})
 	fmt.Println("Migration finished")
 }

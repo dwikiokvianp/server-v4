@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"server-v2/config"
 	"server-v2/models"
@@ -52,20 +53,27 @@ func FindAllDetailTransaction(c *gin.Context) {
 	})
 }
 
-func FindDetailTransactionById(c *gin.Context) {
+func FindDetailTransactionByTransactionId(c *gin.Context) {
 	var transactionDetail []models.TransactionDetail
 
 	if err := config.DB.Where("transaction_id = ?", c.Param("id")).
-		Preload("Transaction.Vehicle.VehicleType").
-		Preload("Transaction.User.Role").
-		Preload("Transaction.User.Company").
-		Preload("Transaction.City").
-		Preload("Transaction.Officer").
-		Preload("Transaction.Province").
-		Preload("Oil").
+		Joins("Transaction.Vehicle.VehicleType").
+		Joins("Transaction.User.Role").
+		Joins("Transaction.User.Company").
+		Joins("Transaction.Officer").
+		Joins("Transaction.City").
+		Joins("Transaction.Province").
+		Joins("Oil").
 		Find(&transactionDetail).Error; err != nil {
 		c.JSON(500, gin.H{
 			"error": err.Error(),
+		})
+		return
+	}
+
+	if len(transactionDetail) == 0 {
+		c.JSON(404, gin.H{
+			"message": fmt.Sprintf("Transaction with id %s not found", c.Param("id")),
 		})
 		return
 	}

@@ -9,6 +9,6 @@ func TransactionDetail(c *gin.Engine) {
 	transactionDetailGroup := c.Group("/transaction_detail")
 	{
 		transactionDetailGroup.GET("", controllers.FindAllDetailTransaction)
-		transactionDetailGroup.GET("/:id", controllers.FindDetailTransactionById)
+		transactionDetailGroup.GET("/:id", controllers.FindDetailTransactionByTransactionId)
 	}
 }

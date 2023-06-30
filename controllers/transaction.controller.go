@@ -182,10 +182,6 @@ func GetAllTransactions(c *gin.Context) {
 	offset := (page - 1) * pageSize
 
 	err := db.Offset(offset).Limit(pageSize).
-		Joins("Vehicle.VehicleType").
-		Joins("User").
-		Joins("City").
-		Joins("Province").
 		Find(&transactions).Error
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
