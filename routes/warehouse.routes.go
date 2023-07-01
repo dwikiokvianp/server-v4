@@ -9,5 +9,6 @@ func WarehouseRoutes(c *gin.Engine) {
 	warehouseGroup := c.Group("/warehouse")
 	{
 		warehouseGroup.GET("", controllers.GetWarehouse)
+		warehouseGroup.GET("/:id", controllers.GetWarehouseById)
 	}
 }
