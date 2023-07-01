@@ -66,10 +66,9 @@ func GenerateFakeUsers(count, role int) {
 	}
 }
 
-func GenerateOil(oils []string) {
-
+func GenerateOil(oils []string, warehouseId int) {
 	detailWarehouse := models.WarehouseDetail{
-		WarehouseID: 1,
+		WarehouseID: uint64(warehouseId),
 	}
 
 	err := config.DB.Create(&detailWarehouse).Error
@@ -223,16 +222,16 @@ func main() {
 
 	fmt.Println("Migration started")
 
-	oils := []string{"MFO", "SOLAR"}
 	roles := []string{"ADMIN_PUSAT", "ADMIN_SALES", "OFFICER", "USER", "DRIVER"}
 	vehicleTypes := []string{"SHIP", "TRUCK"}
 	GenerateRoles(roles)
 	GenerateVehicleType(vehicleTypes)
-	GenerateOil(oils)
 
 	generateFakeCompany(10)
 
 	generateFakeEmployee(10)
+	oils := []string{"MFO", "SOLAR"}
+	GenerateOil(oils, 1)
 
 	generateVehicle(10, 1)
 	generateVehicle(10, 2)
