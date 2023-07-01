@@ -20,7 +20,7 @@ func CreateTravelOrder(c *gin.Context) {
 		PickupLocation: travelDeliveryInput.PickupLocation,
 		DepartureDate:  travelDeliveryInput.DepartureDate,
 		Message:        travelDeliveryInput.Message,
-		Status:         travelDeliveryInput.Status,
+		Status:         "pending",
 	}
 
 	if err := config.DB.Create(&travelOrder).Error; err != nil {
