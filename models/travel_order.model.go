@@ -2,7 +2,7 @@ package models
 
 type TravelOrder struct {
 	ID             int64  `gorm:"primary_key;auto_increment" json:"id"`
-	OfficerID      int64  `gorm:"not null" json:"officer_id"`
+	DriverId       int64  `gorm:"not null" json:"driver_id"`
 	PickupLocation string `gorm:"not null" json:"pickup_location"`
 	DepartureDate  string `json:"departure"`
 	Message        string `gorm:"not null" json:"message"`
@@ -10,7 +10,7 @@ type TravelOrder struct {
 }
 
 type TravelDeliveryInput struct {
-	OfficerID         int64  `gorm:"not null" json:"officer_id" binding:"required"`
+	DriverId          int64  `gorm:"not null" json:"driver_id" binding:"required"`
 	PickupLocation    string `gorm:"not null" json:"pickup_location" binding:"required"`
 	DepartureDate     string `gorm:"not null" json:"departure_date" `
 	Message           string `gorm:"not null" json:"message" binding:"required"`

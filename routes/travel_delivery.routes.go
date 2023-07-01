@@ -9,5 +9,8 @@ func TravelDeliveryRoutes(c *gin.Engine) {
 	travelDeliveryGroup := c.Group("travel-delivery")
 	{
 		travelDeliveryGroup.POST("", controllers.CreateTravelOrder)
+		travelDeliveryGroup.GET("", controllers.GetTravelOrders)
+		travelDeliveryGroup.GET("/:id", controllers.GetTravelOrderById)
+		travelDeliveryGroup.PATCH("/:id", controllers.UpdateStatusTravel)
 	}
 }
