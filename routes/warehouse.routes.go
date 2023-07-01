@@ -8,6 +8,6 @@ import (
 func WarehouseRoutes(c *gin.Engine) {
 	c.Group("/warehouse")
 	{
-		c.GET("/", controllers.GetWarehouse)
+		c.GET("", controllers.GetWarehouse)
 	}
 }
