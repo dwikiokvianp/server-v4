@@ -136,6 +136,20 @@ func generateFakeEmployee(num int) {
 	}
 }
 
+func generateDrivers(num int8) {
+	fake := faker.New()
+	for i := 0; i < int(num); i++ {
+		driver := models.Driver{
+			Username: fake.Person().LastName(),
+			Password: fake.Company().Suffix(),
+		}
+		err := config.DB.Create(&driver).Error
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
 type User struct {
 	Username  string
 	Password  string
@@ -244,5 +258,6 @@ func main() {
 		CompanyID: 1,
 		Phone:     "08123456789",
 	})
+	generateDrivers(100)
 	fmt.Println("Migration finished")
 }

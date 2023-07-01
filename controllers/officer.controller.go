@@ -49,3 +49,25 @@ func GetOfficerById(c *gin.Context) {
 		"data": officer,
 	})
 }
+
+func CreateOfficer(c *gin.Context) {
+	officer := models.Officer{}
+
+	err := c.ShouldBindJSON(&officer)
+	if err != nil {
+		c.JSON(400, gin.H{
+			"message": "Invalid Request",
+		})
+	}
+
+	err = config.DB.Create(&officer).Error
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "Internal Server Error",
+		})
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Officer successfully registered",
+	})
+}

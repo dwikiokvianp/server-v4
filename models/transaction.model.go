@@ -20,6 +20,7 @@ type Transaction struct {
 	CityId     int       `gorm:"not null" json:"city_id"`
 	City       City      `gorm:"foreignkey:CityId"`
 	Date       time.Time `json:"date"`
+	DriverId   int       `gorm:"not null" json:"driver_id"`
 }
 
 type TransactionInput struct {
@@ -39,6 +40,7 @@ type TransactionDetailInput struct {
 	Quantity      int64 `json:"quantity" binding:"required"`
 	TransactionId int64 `json:"transaction_id" binding:"required"`
 	StorageId     int64 `json:"storage_id" binding:"required"`
+	DriverId      int64 `json:"driver_id" binding:"required"`
 }
 
 type TransactionDetailBatchInput struct {

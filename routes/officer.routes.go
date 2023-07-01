@@ -10,5 +10,6 @@ func OfficerRoutes(c *gin.Engine) {
 	{
 		officerGroup.GET("/", controllers.GetOfficer)
 		officerGroup.GET("/:id", controllers.GetOfficerById)
+		officerGroup.POST("/", controllers.CreateOfficer)
 	}
 }
