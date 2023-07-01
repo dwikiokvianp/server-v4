@@ -123,11 +123,23 @@ func generateFakeCompany(num int) {
 
 func generateFakeEmployee(num int) {
 	fake := faker.New()
+
+	var warehouse models.Warehouse
+	warehouse = models.Warehouse{
+		Name:       fake.Company().Name(),
+		ProvinceId: 2,
+		CityId:     2,
+		Location:   fake.Address().City(),
+	}
+	config.DB.Create(&warehouse)
+
 	for i := 0; i < num; i++ {
 		employee := models.Officer{
-			Username: fake.Person().LastName(),
-			Password: fake.Company().Suffix(),
-			Email:    fake.Internet().Email(),
+			Username:    fake.Person().LastName(),
+			Password:    fake.Company().Suffix(),
+			Email:       fake.Internet().Email(),
+			PhoneNumber: fake.Phone().Number(),
+			WarehouseId: warehouse.Id,
 		}
 		err := config.DB.Create(&employee).Error
 		if err != nil {

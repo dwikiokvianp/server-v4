@@ -33,6 +33,7 @@ func InitDatabase(url string) *gorm.DB {
 		&models.Detail{},
 		&models.Storage{},
 		&models.Driver{},
+		&models.Warehouse{},
 		&models.Proof{})
 	if migrateError != nil {
 		log.Fatalln(err)
