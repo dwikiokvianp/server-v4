@@ -60,7 +60,6 @@ func CreateTransactions(c *gin.Context) {
 
 	for _, detail := range inputTransaction.TransactionDetail {
 		transactionDetail := models.TransactionDetail{
-			OilID:         detail.OilID,
 			Quantity:      detail.Quantity,
 			TransactionID: int64(transaction.ID),
 			StorageID:     detail.StorageId,

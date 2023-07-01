@@ -16,25 +16,7 @@ func InitDatabase(url string) *gorm.DB {
 		log.Fatalln(err)
 	}
 
-	migrateError := db.AutoMigrate(
-		&models.Role{},
-		&models.DeliveryOrder{},
-		&models.TravelOrder{},
-		&models.User{},
-		&models.Oil{},
-		&models.VehicleType{},
-		&models.Vehicle{},
-		&models.Transaction{},
-		&models.TransactionDetail{},
-		&models.Officer{},
-		&models.Company{},
-		&models.HistoryOut{},
-		&models.HistoryIn{},
-		&models.Detail{},
-		&models.Storage{},
-		&models.Driver{},
-		&models.Warehouse{},
-		&models.Proof{})
+	migrateError := db.AutoMigrate(modelsToMigrate...)
 	if migrateError != nil {
 		log.Fatalln(err)
 		return nil
@@ -44,4 +26,26 @@ func InitDatabase(url string) *gorm.DB {
 
 	return nil
 
+}
+
+var modelsToMigrate = []interface{}{
+	&models.Role{},
+	&models.DeliveryOrder{},
+	&models.TravelOrder{},
+	&models.Warehouse{},
+	&models.WarehouseDetail{},
+	&models.User{},
+	&models.Oil{},
+	&models.VehicleType{},
+	&models.Vehicle{},
+	&models.Transaction{},
+	&models.TransactionDetail{},
+	&models.Officer{},
+	&models.Company{},
+	&models.HistoryOut{},
+	&models.HistoryIn{},
+	&models.Detail{},
+	&models.Storage{},
+	&models.Driver{},
+	&models.Proof{},
 }

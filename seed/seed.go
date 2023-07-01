@@ -67,11 +67,23 @@ func GenerateFakeUsers(count, role int) {
 }
 
 func GenerateOil(oils []string) {
+
+	detailWarehouse := models.WarehouseDetail{
+		WarehouseID: 1,
+	}
+
+	err := config.DB.Create(&detailWarehouse).Error
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	for _, oil := range oils {
 
 		storage := models.Storage{
-			Name:         fmt.Sprintf("%s Storage", oil),
-			QuantityTank: 80_000,
+			Name:              fmt.Sprintf("%s Storage", oil),
+			Quantity:          80_000,
+			WarehouseDetailID: detailWarehouse.ID,
+			OilID:             1,
 		}
 
 		err := config.DB.Create(&storage).Error
@@ -110,9 +122,11 @@ func generateFakeCompany(num int) {
 	for i := 0; i < num; i++ {
 		company := models.Company{
 			CompanyName:    fake.Company().Name(),
-			Address:        fake.Address().Address(),
-			CompanyDetail:  fake.Company().Suffix(),
+			Address:        fake.Address().StreetAddress(),
+			CompanyDetail:  fake.Company().BS(),
 			CompanyZipCode: fake.RandomNumber(5),
+			ProvinceId:     1,
+			CityId:         3,
 		}
 		err := config.DB.Create(&company).Error
 		if err != nil {
