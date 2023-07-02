@@ -5,8 +5,7 @@ type DeliveryOrder struct {
 	Recipient         string `json:"recipient"`
 	TravelOrderID     int64  `gorm:"not null" json:"travel_order_id"`
 	UserID            int64  `gorm:"not null" json:"user_id"`
-	CustomerLocation  string `json:"customer_location"`
-	WarehouseLocation string `json:"warehouse_location"`
+	WarehouseID       int64  `gorm:"not null" json:"warehouse_id"`
 	OilId             int64  `gorm:"not null" json:"oil_id"`
 	DeliveredQuantity int64  `json:"delivered_quantity"`
 	WarehouseQuantity int64  `json:"warehouse_quantity"`

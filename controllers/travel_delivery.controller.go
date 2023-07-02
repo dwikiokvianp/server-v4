@@ -33,8 +33,7 @@ func CreateTravelOrder(c *gin.Context) {
 	deliveryOrder := models.DeliveryOrder{
 		UserID:            travelDeliveryInput.UserID,
 		TravelOrderID:     travelOrder.ID,
-		CustomerLocation:  travelDeliveryInput.CustomerLocation,
-		WarehouseLocation: travelDeliveryInput.WarehouseLocation,
+		WarehouseID:       travelDeliveryInput.WarehouseID,
 		OilId:             travelDeliveryInput.OilId,
 		DeliveredQuantity: travelDeliveryInput.DeliveredQuantity,
 		WarehouseQuantity: travelDeliveryInput.WarehouseQuantity,
