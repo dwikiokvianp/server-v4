@@ -11,7 +11,7 @@ func CreateTravelOrder(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&travelDeliveryInput); err != nil {
 		c.JSON(400, gin.H{
-			"error": err.Error(),
+			"message": "Failed to bind JSON",
 		})
 		return
 	}
@@ -25,13 +25,14 @@ func CreateTravelOrder(c *gin.Context) {
 
 	if err := config.DB.Create(&travelOrder).Error; err != nil {
 		c.JSON(400, gin.H{
-			"error": "Failed to created travel order",
+			"message": "Failed to created travel order",
 		})
 		return
 	}
 
 	deliveryOrder := models.DeliveryOrder{
 		Recipient:         travelDeliveryInput.Recipient,
+		UserID:            travelDeliveryInput.UserID,
 		TravelOrderID:     travelOrder.ID,
 		CustomerLocation:  travelDeliveryInput.CustomerLocation,
 		WarehouseLocation: travelDeliveryInput.WarehouseLocation,
@@ -42,7 +43,7 @@ func CreateTravelOrder(c *gin.Context) {
 
 	if err := config.DB.Create(&deliveryOrder).Error; err != nil {
 		c.JSON(400, gin.H{
-			"error": err.Error(),
+			"message": err.Error(),
 		})
 		return
 	}
@@ -57,7 +58,7 @@ func GetTravelOrderById(c *gin.Context) {
 	var travelOrder models.TravelOrder
 	if err := config.DB.Where("id = ?", id).First(&travelOrder).Error; err != nil {
 		c.JSON(400, gin.H{
-			"error": "Travel order not found",
+			"message": "Travel order not found",
 		})
 		return
 	}
@@ -75,7 +76,7 @@ func GetTravelOrders(c *gin.Context) {
 	id := c.Param("driver_id")
 	if err := config.DB.Where("driver_id = ?", id).Find(&travelOrders).Error; err != nil {
 		c.JSON(400, gin.H{
-			"error": "Failed to get travel orders",
+			"message": "Failed to get travel orders",
 		})
 		return
 	}
@@ -90,7 +91,7 @@ func UpdateStatusTravel(c *gin.Context) {
 	var travelOrder models.TravelOrder
 	if err := config.DB.Where("id = ?", id).First(&travelOrder).Error; err != nil {
 		c.JSON(400, gin.H{
-			"error": "Travel order not found",
+			"message": "Travel order not found",
 		})
 		return
 	}

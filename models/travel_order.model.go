@@ -10,6 +10,7 @@ type TravelOrder struct {
 }
 
 type TravelDeliveryInput struct {
+	UserID            int64  `gorm:"not null" json:"user_id" binding:"required"`
 	DriverId          int64  `gorm:"not null" json:"driver_id" binding:"required"`
 	PickupLocation    string `gorm:"not null" json:"pickup_location" binding:"required"`
 	DepartureDate     string `gorm:"not null" json:"departure_date" `
