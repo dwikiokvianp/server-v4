@@ -23,9 +23,7 @@ func InitDatabase(url string) *gorm.DB {
 	}
 
 	DB = db
-
 	return nil
-
 }
 
 var modelsToMigrate = []interface{}{
