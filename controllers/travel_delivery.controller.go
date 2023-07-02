@@ -31,12 +31,8 @@ func CreateTravelOrder(c *gin.Context) {
 	}
 
 	deliveryOrder := models.DeliveryOrder{
-		UserID:            travelDeliveryInput.UserID,
-		TravelOrderID:     travelOrder.ID,
-		WarehouseID:       travelDeliveryInput.WarehouseID,
-		OilId:             travelDeliveryInput.OilId,
-		DeliveredQuantity: travelDeliveryInput.DeliveredQuantity,
-		WarehouseQuantity: travelDeliveryInput.WarehouseQuantity,
+		TravelOrderID: travelOrder.ID,
+		OilId:         travelDeliveryInput.OilId,
 	}
 
 	if err := config.DB.Create(&deliveryOrder).Error; err != nil {
@@ -46,8 +42,34 @@ func CreateTravelOrder(c *gin.Context) {
 		return
 	}
 
+	deliveryOrderWarehouseDetail := models.DeliveryOrderWarehouseDetail{
+		WarehouseID:     travelDeliveryInput.WarehouseID,
+		Quantity:        travelDeliveryInput.WarehouseQuantity,
+		DeliveryOrderID: deliveryOrder.ID,
+	}
+
+	if err := config.DB.Create(&deliveryOrderWarehouseDetail).Error; err != nil {
+		c.JSON(400, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	deliveryOrderRecipientDetail := models.DeliveryOrderRecipientDetail{
+		DeliveryOrderID: deliveryOrder.ID,
+		UserId:          travelDeliveryInput.UserID,
+		Quantity:        travelDeliveryInput.DeliveredQuantity,
+	}
+
+	if err := config.DB.Create(&deliveryOrderRecipientDetail).Error; err != nil {
+		c.JSON(400, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "Travel delivery and controller is successfully created",
+		"message": "Success create travel order",
 	})
 }
 
