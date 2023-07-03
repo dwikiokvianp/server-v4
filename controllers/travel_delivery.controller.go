@@ -48,6 +48,8 @@ func CreateTravelOrder(c *gin.Context) {
 			DeliveryOrderID: deliveryOrder.ID,
 			UserId:          recipientDetail.UserId,
 			Quantity:        recipientDetail.Quantity,
+			ProvinceId:      recipientDetail.ProvinceId,
+			CityId:          recipientDetail.CityId,
 		}
 
 		if err := config.DB.Create(&deliveryOrderRecipientDetail).Error; err != nil {
