@@ -10,14 +10,12 @@ type TravelOrder struct {
 }
 
 type TravelDeliveryInput struct {
-	UserID            int64  `gorm:"not null" json:"user_id" binding:"required"`
-	DriverId          int64  `gorm:"not null" json:"driver_id" binding:"required"`
-	PickupLocation    string `gorm:"not null" json:"pickup_location" binding:"required"`
-	DepartureDate     string `gorm:"not null" json:"departure_date" `
-	Message           string `gorm:"not null" json:"message" binding:"required"`
-	Status            string `gorm:"not null" json:"status" binding:"required"`
-	WarehouseID       int64  `gorm:"not null" json:"warehouse_id" binding:"required"`
-	OilId             int64  `gorm:"not null" json:"oil_id" binding:"required"`
-	DeliveredQuantity int64  `json:"delivered_quantity" binding:"required"`
-	WarehouseQuantity int64  `json:"warehouse_quantity" binding:"required"`
+	DriverId        int64                          `gorm:"not null" json:"driver_id" binding:"required"`
+	PickupLocation  string                         `gorm:"not null" json:"pickup_location" binding:"required"`
+	DepartureDate   string                         `gorm:"not null" json:"departure_date" `
+	Message         string                         `gorm:"not null" json:"message" binding:"required"`
+	Status          string                         `gorm:"not null" json:"status" binding:"required"`
+	OilId           int64                          `gorm:"not null" json:"oil_id" binding:"required"`
+	RecipientDetail []DeliveryOrderRecipientDetail `json:"recipient_detail"`
+	WarehouseDetail []DeliveryOrderWarehouseDetail `json:"warehouse_detail"`
 }

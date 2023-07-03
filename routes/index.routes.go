@@ -6,6 +6,7 @@ import (
 
 func Routes(c *gin.Engine) {
 	AuthRoutes(c)
+	DriverRoutes(c)
 	UserRoutes(c)
 	CityRoutes(c)
 	WarehouseRoutes(c)
