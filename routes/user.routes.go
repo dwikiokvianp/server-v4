@@ -9,6 +9,7 @@ func UserRoutes(c *gin.Engine) {
 	userGroup := c.Group("/users")
 	{
 		userGroup.GET("", controllers.GetAllUser)
+		userGroup.GET("/no-paginate", controllers.GetAllUserWithoutPagination)
 		userGroup.GET("/:id", controllers.GetUserById)
 		userGroup.POST("", controllers.CreateUser)
 		userGroup.PUT("/balance-credit", controllers.UpdateBalanceAndCredit)

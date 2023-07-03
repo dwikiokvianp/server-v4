@@ -7,7 +7,7 @@ import (
 )
 
 func GetWarehouse(c *gin.Context) {
-	warehouse := models.Warehouse{}
+	var warehouse []models.Warehouse
 	if err := config.DB.
 		Preload("WarehouseDetail.Storage").
 		Find(&warehouse).Error; err != nil {
