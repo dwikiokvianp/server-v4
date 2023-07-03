@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"server-v2/config"
 	"server-v2/models"
+	"server-v2/utils"
+	"strconv"
 )
 
 func CreateTravelOrder(c *gin.Context) {
@@ -15,12 +18,27 @@ func CreateTravelOrder(c *gin.Context) {
 		})
 		return
 	}
+
+	var totalQuantity int64
+	for _, recipientDetail := range travelDeliveryInput.RecipientDetail {
+		totalQuantity += recipientDetail.Quantity
+	}
+
+	if totalQuantity > travelDeliveryInput.Quantity {
+		c.JSON(400, gin.H{
+			"message": "Total quantity of recipient detail is greater than quantity of travel order",
+		})
+		return
+	}
+
 	travelOrder := models.TravelOrder{
 		DriverId:       travelDeliveryInput.DriverId,
 		PickupLocation: travelDeliveryInput.PickupLocation,
 		DepartureDate:  travelDeliveryInput.DepartureDate,
 		Message:        travelDeliveryInput.Message,
 		OfficerId:      travelDeliveryInput.OfficerId,
+		VehicleId:      travelDeliveryInput.VehicleId,
+		Quantity:       travelDeliveryInput.Quantity,
 		Status:         "received",
 	}
 
@@ -43,37 +61,100 @@ func CreateTravelOrder(c *gin.Context) {
 		return
 	}
 
-	for _, recipientDetail := range travelDeliveryInput.RecipientDetail {
-		deliveryOrderRecipientDetail := models.DeliveryOrderRecipientDetail{
-			DeliveryOrderID: deliveryOrder.ID,
-			UserId:          recipientDetail.UserId,
-			Quantity:        recipientDetail.Quantity,
-			ProvinceId:      recipientDetail.ProvinceId,
-			CityId:          recipientDetail.CityId,
-		}
+	go func() {
+		for _, recipientDetail := range travelDeliveryInput.RecipientDetail {
+			deliveryOrderRecipientDetail := models.DeliveryOrderRecipientDetail{
+				DeliveryOrderID: deliveryOrder.ID,
+				UserId:          recipientDetail.UserId,
+				Quantity:        recipientDetail.Quantity,
+				ProvinceId:      recipientDetail.ProvinceId,
+				CityId:          recipientDetail.CityId,
+				Email:           recipientDetail.Email,
+			}
 
-		if err := config.DB.Create(&deliveryOrderRecipientDetail).Error; err != nil {
-			c.JSON(400, gin.H{
-				"message": err.Error(),
-			})
-			return
-		}
-	}
+			if err := config.DB.Create(&deliveryOrderRecipientDetail).Error; err != nil {
+				c.JSON(400, gin.H{
+					"message": err.Error(),
+				})
+				return
+			}
 
-	for _, warehouseDetail := range travelDeliveryInput.WarehouseDetail {
-		deliveryOrderWarehouseDetail := models.DeliveryOrderWarehouseDetail{
-			DeliveryOrderID: deliveryOrder.ID,
-			WarehouseID:     warehouseDetail.WarehouseID,
-			Quantity:        warehouseDetail.Quantity,
-		}
+			myTransaction := models.Transaction{
+				UserId:     int(recipientDetail.UserId),
+				ProvinceId: int(recipientDetail.ProvinceId),
+				CityId:     int(recipientDetail.CityId),
+				OfficerId:  int(travelDeliveryInput.OfficerId),
+				DriverId:   int(travelDeliveryInput.DriverId),
+				Email:      recipientDetail.Email,
+				VehicleId:  int(travelDeliveryInput.VehicleId),
+				Status:     "pending",
+				Date:       travelDeliveryInput.DepartureDate,
+			}
 
-		if err := config.DB.Create(&deliveryOrderWarehouseDetail).Error; err != nil {
-			c.JSON(400, gin.H{
-				"message": err.Error(),
-			})
-			return
+			if err := config.DB.Create(&myTransaction).Error; err != nil {
+				c.JSON(400, gin.H{
+					"message": err.Error(),
+				})
+				return
+			}
+
+			transactionDetail := models.TransactionDetail{
+				Quantity:      recipientDetail.Quantity,
+				TransactionID: int64(myTransaction.ID),
+			}
+
+			if err := config.DB.Create(&transactionDetail).Error; err != nil {
+				c.JSON(400, gin.H{
+					"message": err.Error(),
+				})
+				return
+			}
+
+			qrData := strconv.Itoa(int(myTransaction.ID))
+			qrFile, err := utils.GenerateQRCode(qrData)
+			if err != nil {
+				c.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			key := fmt.Sprintf("qrcodes/%v", qrData)
+			qrURL, err := utils.UploadToS3(qrFile, key)
+			if err != nil {
+				c.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			myTransaction.QrCodeUrl = qrURL
+
+			if err := config.DB.Save(&myTransaction).Error; err != nil {
+				c.JSON(400, gin.H{
+					"message": err.Error(),
+				})
+				return
+			}
 		}
-	}
+	}()
+
+	go func() {
+		for _, warehouseDetail := range travelDeliveryInput.WarehouseDetail {
+			deliveryOrderWarehouseDetail := models.DeliveryOrderWarehouseDetail{
+				DeliveryOrderID: deliveryOrder.ID,
+				WarehouseID:     warehouseDetail.WarehouseID,
+				Quantity:        warehouseDetail.Quantity,
+			}
+
+			if err := config.DB.Create(&deliveryOrderWarehouseDetail).Error; err != nil {
+				c.JSON(400, gin.H{
+					"message": err.Error(),
+				})
+				return
+			}
+		}
+	}()
 
 	c.JSON(200, gin.H{
 		"message": "Success create travel order",
