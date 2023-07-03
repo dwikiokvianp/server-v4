@@ -9,5 +9,6 @@ func DriverRoutes(c *gin.Engine) {
 	driverGroup := c.Group("drivers")
 	{
 		driverGroup.GET("", controllers.GetDrivers)
+		driverGroup.GET("/:id/transactions", controllers.GetTransactionByDriverId)
 	}
 }
