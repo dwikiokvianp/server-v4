@@ -216,21 +216,3 @@ func UpdateStatusTravel(c *gin.Context) {
 		"data": travelOrder,
 	})
 }
-
-func UpdateWarehouseCustomerDetails(c *gin.Context) {
-	var inputTravelOrder models.TravelOrder
-	if err := c.ShouldBindJSON(&inputTravelOrder); err != nil {
-		c.JSON(400, gin.H{
-			"message": "Failed to bind JSON",
-		})
-		return
-	}
-
-	var travelOrder models.TravelOrder
-	if err := config.DB.Where("id = ?", inputTravelOrder.ID).First(&travelOrder).Error; err != nil {
-		c.JSON(400, gin.H{
-			"message": "Travel order not found",
-		})
-		return
-	}
-}
