@@ -20,6 +20,7 @@ func CreateTravelOrder(c *gin.Context) {
 		PickupLocation: travelDeliveryInput.PickupLocation,
 		DepartureDate:  travelDeliveryInput.DepartureDate,
 		Message:        travelDeliveryInput.Message,
+		OfficerId:      travelDeliveryInput.OfficerId,
 		Status:         "received",
 	}
 

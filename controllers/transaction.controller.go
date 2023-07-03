@@ -40,6 +40,7 @@ func CreateTransactions(c *gin.Context) {
 		Date:       inputTransaction.Date,
 		CityId:     inputTransaction.CityId,
 		ProvinceId: inputTransaction.ProvinceId,
+		DriverId:   inputTransaction.DriverId,
 	}
 
 	if err := config.DB.Create(&transaction).Error; err != nil {
@@ -180,8 +181,7 @@ func GetAllTransactions(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
-	err := db.Offset(offset).Limit(pageSize).
-		Find(&transactions).Error
+	err := db.Offset(offset).Limit(pageSize).Joins("User").Find(&transactions).Error
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return

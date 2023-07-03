@@ -31,6 +31,7 @@ type TransactionInput struct {
 	Date              time.Time                `json:"date"`
 	CityId            int                      `gorm:"not null" json:"city_id"`
 	ProvinceId        int                      `gorm:"not null" json:"province_id"`
+	DriverId          int                      `gorm:"not null" json:"driver_id"`
 	TransactionDetail []TransactionDetailInput `json:"transaction_detail"`
 	StorageId         int                      `json:"storage_id"`
 }

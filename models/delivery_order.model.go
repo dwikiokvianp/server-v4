@@ -18,4 +18,6 @@ type DeliveryOrderRecipientDetail struct {
 	DeliveryOrderID int64 `gorm:"not null" json:"delivery_order_id"`
 	UserId          int64 `gorm:"not null" json:"user_id"`
 	Quantity        int64 `json:"quantity"`
+	ProvinceId      int64 `gorm:"not null" json:"province_id"`
+	CityId          int64 `gorm:"not null" json:"city_id"`
 }
