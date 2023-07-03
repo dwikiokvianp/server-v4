@@ -22,15 +22,11 @@ func GetDrivers(c *gin.Context) {
 }
 
 func GetTransactionByDriverId(c *gin.Context) {
-	id := c.Param("id")
-	var transactions []models.Transaction
-
-	if err := config.DB.Where("driver_id = ?", id).
-		Joins("User.Company").
-		Joins("Officer").
-		Joins("Province").
-		Joins("City").
-		Find(&transactions).Error; err != nil {
+	var travelOrders []models.TravelOrder
+	if err := config.DB.Where("driver_id = ?", c.Param("id")).
+		Preload("DeliveryOrderRecipientDetail").
+		Preload("DeliveryOrderWarehouseDetail").
+		Find(&travelOrders).Error; err != nil {
 		c.JSON(400, gin.H{
 			"message": err.Error(),
 		})
@@ -38,6 +34,6 @@ func GetTransactionByDriverId(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"data": transactions,
+		"data": travelOrders,
 	})
 }

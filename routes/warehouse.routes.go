@@ -10,5 +10,6 @@ func WarehouseRoutes(c *gin.Engine) {
 	{
 		warehouseGroup.GET("", controllers.GetWarehouse)
 		warehouseGroup.GET("/:id", controllers.GetWarehouseById)
+		warehouseGroup.GET("/storage/:id", controllers.GetStorageWarehouse)
 	}
 }
