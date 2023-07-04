@@ -34,7 +34,6 @@ func CreateTransactions(c *gin.Context) {
 	transaction := models.Transaction{
 		UserId:     intUserId,
 		Email:      inputTransaction.Email,
-		VehicleId:  inputTransaction.VehicleId,
 		OfficerId:  inputTransaction.OfficerId,
 		Status:     "pending",
 		Date:       inputTransaction.Date,
@@ -45,7 +44,7 @@ func CreateTransactions(c *gin.Context) {
 
 	if err := config.DB.Create(&transaction).Error; err != nil {
 		c.JSON(500, gin.H{
-			"error": err.Error(),
+			"error": "Error here in the create transaction",
 		})
 		return
 	}

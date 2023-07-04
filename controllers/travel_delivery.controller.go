@@ -88,7 +88,6 @@ func CreateTravelOrder(c *gin.Context) {
 				OfficerId:  int(travelDeliveryInput.OfficerId),
 				DriverId:   int(travelDeliveryInput.DriverId),
 				Email:      recipientDetail.Email,
-				VehicleId:  int(travelDeliveryInput.VehicleId),
 				Status:     "pending",
 				Date:       travelDeliveryInput.DepartureDate,
 			}
