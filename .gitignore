@@ -2,3 +2,4 @@
 /.env.local
 /tmp/main
 /qrcode.png
+/tmp/build-errors.log
