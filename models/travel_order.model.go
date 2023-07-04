@@ -10,6 +10,8 @@ type TravelOrder struct {
 	Message                      string                         `gorm:"not null" json:"message"`
 	Status                       string                         `gorm:"not null" json:"status"`
 	OfficerId                    int64                          `gorm:"not null" json:"officer_id"`
+	Officer                      Officer                        `json:"officer"`
+	Vehicle                      Vehicle                        `json:"vehicle"`
 	VehicleId                    int64                          `gorm:"not null" json:"vehicle_id"`
 	Quantity                     int64                          `gorm:"not null" json:"quantity"`
 	DeliveryOrderRecipientDetail []DeliveryOrderRecipientDetail `gorm:"foreignkey:delivery_order_id" json:"recipient_detail"`

@@ -122,7 +122,7 @@ func CreateTravelOrder(c *gin.Context) {
 				return
 			}
 
-			key := fmt.Sprintf("qrcodes/%v", qrData)
+			key := fmt.Sprintf("qrcodes/%v.png", qrData)
 			qrURL, err := utils.UploadToS3(qrFile, key)
 			if err != nil {
 				c.JSON(500, gin.H{
@@ -167,7 +167,8 @@ func CreateTravelOrder(c *gin.Context) {
 
 func GetTravelOrder(c *gin.Context) {
 	var travelOrder []models.TravelOrder
-	if err := config.DB.Find(&travelOrder).Error; err != nil {
+	if err := config.DB.
+		Find(&travelOrder).Error; err != nil {
 		c.JSON(400, gin.H{
 			"message": "Failed to get travel order",
 		})
