@@ -211,6 +211,7 @@ func GetByIdTransaction(c *gin.Context) {
 	var transaction models.Transaction
 	id := c.Param("id")
 	err := config.DB.
+		Preload("TransactionDetail.Oil").
 		Joins("Vehicle.VehicleType").
 		Joins("User.Role").
 		Joins("Officer").

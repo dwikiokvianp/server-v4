@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"server-v2/config"
 	"server-v2/models"
@@ -23,6 +24,7 @@ func GetDrivers(c *gin.Context) {
 
 func GetTransactionByDriverId(c *gin.Context) {
 	var travelOrders []models.TravelOrder
+	fmt.Println(c.Param("id"))
 	if err := config.DB.Where("driver_id = ?", c.Param("id")).
 		Preload("DeliveryOrderRecipientDetail").
 		Preload("DeliveryOrderWarehouseDetail").

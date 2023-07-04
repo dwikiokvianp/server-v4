@@ -6,4 +6,5 @@ type TransactionDetail struct {
 	Quantity      int64 `gorm:"not null" json:"quantity"`
 	StorageID     int64 `json:"storage_id"`
 	OilID         int64 `json:"oil_id"`
+	Oil           Oil   `json:"oil"`
 }

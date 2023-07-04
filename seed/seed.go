@@ -136,10 +136,9 @@ func generateFakeCompany(num int) {
 
 func generateFakeEmployee(num int) {
 	fake := faker.New()
-
 	var warehouse models.Warehouse
 	warehouse = models.Warehouse{
-		Name:       fake.Company().Name(),
+		Name:       fake.Car().Model(),
 		ProvinceId: 2,
 		CityId:     2,
 		Location:   fake.Address().City(),

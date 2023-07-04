@@ -103,6 +103,7 @@ func CreateTravelOrder(c *gin.Context) {
 			transactionDetail := models.TransactionDetail{
 				Quantity:      recipientDetail.Quantity,
 				TransactionID: int64(myTransaction.ID),
+				OilID:         travelDeliveryInput.OilId,
 			}
 
 			if err := config.DB.Create(&transactionDetail).Error; err != nil {
