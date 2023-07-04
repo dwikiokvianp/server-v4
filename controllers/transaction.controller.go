@@ -165,11 +165,17 @@ func GetAllTransactions(c *gin.Context) {
 		transactions []models.Transaction
 		pageSize     = 10
 		page         = 1
+		status       = "pending"
 	)
 
 	pageParam := c.Query("page")
 	if pageParam != "" {
 		page, _ = strconv.Atoi(pageParam)
+	}
+
+	statusParam := c.Query("status")
+	if statusParam != "" {
+		status = statusParam
 	}
 
 	db := config.DB
@@ -183,6 +189,7 @@ func GetAllTransactions(c *gin.Context) {
 	offset := (page - 1) * pageSize
 
 	err := db.Offset(offset).Limit(pageSize).
+		Where("status = ?", status).
 		Joins("User.Company").
 		Joins("User").
 		Joins("Vehicle.VehicleType").
