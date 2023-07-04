@@ -64,6 +64,7 @@ func CreateTransactions(c *gin.Context) {
 			Quantity:      detail.Quantity,
 			TransactionID: int64(transaction.ID),
 			StorageID:     detail.StorageId,
+			OilID:         detail.OilID,
 		}
 		transactionDetails = append(transactionDetails, transactionDetail)
 	}
@@ -84,7 +85,7 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	key := fmt.Sprintf("qrcodes/%v", transaction.ID)
+	key := fmt.Sprintf("qrcodes/%v.png", transaction.ID)
 	qrURL, err := utils.UploadToS3(qrFile, key)
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -136,6 +137,7 @@ func CreateTransactions(c *gin.Context) {
 	</body>
 	</html>
 	`
+
 	go func() {
 		err = utils.SendEmail(email, subject, body, qrFile)
 		if err != nil {
@@ -183,6 +185,7 @@ func GetAllTransactions(c *gin.Context) {
 
 	err := db.Offset(offset).Limit(pageSize).
 		Joins("User.Company").
+		Joins("User").
 		Joins("Vehicle.VehicleType").
 		Joins("Officer").
 		Joins("Province").

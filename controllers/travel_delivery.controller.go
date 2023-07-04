@@ -69,8 +69,10 @@ func CreateTravelOrder(c *gin.Context) {
 				Quantity:        recipientDetail.Quantity,
 				ProvinceId:      recipientDetail.ProvinceId,
 				CityId:          recipientDetail.CityId,
-				Email:           recipientDetail.Email,
+				OilId:           travelDeliveryInput.OilId,
 			}
+
+			fmt.Println(int(recipientDetail.UserId))
 
 			if err := config.DB.Create(&deliveryOrderRecipientDetail).Error; err != nil {
 				c.JSON(400, gin.H{
@@ -145,6 +147,7 @@ func CreateTravelOrder(c *gin.Context) {
 				DeliveryOrderID: deliveryOrder.ID,
 				WarehouseID:     warehouseDetail.WarehouseID,
 				Quantity:        warehouseDetail.Quantity,
+				StorageID:       warehouseDetail.StorageID,
 			}
 
 			if err := config.DB.Create(&deliveryOrderWarehouseDetail).Error; err != nil {
