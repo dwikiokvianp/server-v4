@@ -83,17 +83,11 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	//if !utils.CheckPasswordHash(inputAuth.Password, user.Password) {
-	//	c.JSON(401, gin.H{"message": "username or password is incorrect"})
-	//	return
-	//}
-
 	if inputAuth.Password != user.Password {
 		c.JSON(401, gin.H{"message": "username or password is incorrect"})
 		return
 	}
 
-	//make user.id to string
 	id := strconv.Itoa(user.Id)
 	token, err := utils.GenerateJWT(user.Email, user.Role.Role, id)
 	if err != nil {
