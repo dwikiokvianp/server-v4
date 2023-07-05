@@ -229,7 +229,7 @@ func main() {
 	generateFakeCompany(10)
 
 	generateFakeEmployee(10)
-	oils := []string{"MFO", "SOLAR"}
+	oils := []string{"SOLAR", "MFO"}
 	GenerateOil(oils, 1)
 
 	generateVehicle(10, 1)

@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"server-v2/config"
 	"server-v2/models"
-	"server-v2/utils"
 	"strconv"
 	"time"
 )
@@ -75,85 +74,84 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	qrData := strconv.Itoa(int(transaction.ID))
-	qrFile, err := utils.GenerateQRCode(qrData)
-	if err != nil {
-		c.JSON(500, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+	//qrData := strconv.Itoa(int(transaction.ID))
+	//qrFile, err := utils.GenerateQRCode(qrData)
+	//if err != nil {
+	//	c.JSON(500, gin.H{
+	//		"error": err.Error(),
+	//	})
+	//	return
+	//}
+	//
+	//key := fmt.Sprintf("qrcodes/%v.png", transaction.ID)
+	//qrURL, err := utils.UploadToS3(qrFile, key)
+	//if err != nil {
+	//	c.JSON(500, gin.H{
+	//		"error": err.Error(),
+	//	})
+	//	return
+	//}
 
-	key := fmt.Sprintf("qrcodes/%v.png", transaction.ID)
-	qrURL, err := utils.UploadToS3(qrFile, key)
-	if err != nil {
-		c.JSON(500, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+	//email := inputTransaction.Email
+	//subject := "QR Code Transaction"
+	//body := `
+	//<html>
+	//<head>
+	//	<style>
+	//		body {
+	//			font-family: Arial, sans-serif;
+	//			background-color: #f2f2f2;
+	//			padding: 20px;
+	//		}
+	//
+	//		h1 {
+	//			color: #333333;
+	//			font-size: 24px;
+	//			font-weight: bold;
+	//			margin-bottom: 20px;
+	//		}
+	//
+	//		p {
+	//			color: #666666;
+	//			font-size: 16px;
+	//			line-height: 1.5;
+	//			margin-bottom: 10px;
+	//		}
+	//
+	//		.qr-code {
+	//			display: block;
+	//			text-align: center;
+	//			margin-bottom: 20px;
+	//		}
+	//
+	//		.qr-code img {
+	//			max-width: 200px;
+	//			height: auto;
+	//		}
+	//	</style>
+	//</head>
+	//<body>
+	//	<p>Tunjukkan QR kode ini kepada petugas untuk mendapatkan layanan.</p>
+	//</body>
+	//</html>
+	//`
 
-	email := inputTransaction.Email
-	subject := "QR Code Transaction"
-	body := `
-	<html>
-	<head>
-		<style>
-			body {
-				font-family: Arial, sans-serif;
-				background-color: #f2f2f2;
-				padding: 20px;
-			}
-	
-			h1 {
-				color: #333333;
-				font-size: 24px;
-				font-weight: bold;
-				margin-bottom: 20px;
-			}
-	
-			p {
-				color: #666666;
-				font-size: 16px;
-				line-height: 1.5;
-				margin-bottom: 10px;
-			}
-	
-			.qr-code {
-				display: block;
-				text-align: center;
-				margin-bottom: 20px;
-			}
-	
-			.qr-code img {
-				max-width: 200px;
-				height: auto;
-			}
-		</style>
-	</head>
-	<body>
-		<p>Tunjukkan QR kode ini kepada petugas untuk mendapatkan layanan.</p>
-	</body>
-	</html>
-	`
-
-	go func() {
-		err = utils.SendEmail(email, subject, body, qrFile)
-		if err != nil {
-			c.JSON(500, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-	}()
-
-	transaction.QrCodeUrl = qrURL
-	if err := config.DB.Save(&transaction).Error; err != nil {
-		c.JSON(500, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+	//go func() {
+	//	err = utils.SendEmail(email, subject, body, qrFile)
+	//	if err != nil {
+	//		c.JSON(500, gin.H{
+	//			"error": err.Error(),
+	//		})
+	//		return
+	//	}
+	//}()
+	//transaction.QrCodeUrl = qrURL
+	//if err := config.DB.Save(&transaction).Error; err != nil {
+	//	c.JSON(500, gin.H{
+	//		"error": err.Error(),
+	//	})
+	//	return
+	//}
 
 	c.JSON(200, gin.H{
 		"message": "success create transaction",
@@ -211,6 +209,47 @@ func GetAllTransactions(c *gin.Context) {
 		"pageSize": pageSize,
 		"total":    totalPages,
 	})
+}
+
+func UpdateTransactionBatch(c *gin.Context) {
+	type IdToUpdate struct {
+		Id        uint64 `json:"id"`
+		VehicleId *int   `json:"vehicle_id"`
+		DriverId  int    `json:"driver_id"`
+	}
+
+	var ids []IdToUpdate
+	if err := c.ShouldBindJSON(&ids); err != nil {
+		c.JSON(400, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	for _, id := range ids {
+		transaction := models.Transaction{}
+		if err := config.DB.Find(&transaction, id.Id).Error; err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		transaction.VehicleId = id.VehicleId
+		transaction.DriverId = id.DriverId
+		transaction.Status = "approved"
+		if err := config.DB.Save(&transaction).Error; err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+	}
+
+	c.JSON(200, gin.H{
+		"message": "success update transaction",
+	})
+
 }
 
 func GetByIdTransaction(c *gin.Context) {

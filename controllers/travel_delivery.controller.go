@@ -14,7 +14,7 @@ func CreateTravelOrder(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&travelDeliveryInput); err != nil {
 		c.JSON(400, gin.H{
-			"message": "Failed to bind JSON",
+			"message": "Failed to bind gagal",
 		})
 		return
 	}
@@ -70,6 +70,7 @@ func CreateTravelOrder(c *gin.Context) {
 				ProvinceId:      recipientDetail.ProvinceId,
 				CityId:          recipientDetail.CityId,
 				OilId:           travelDeliveryInput.OilId,
+				TransactionID:   recipientDetail.TransactionID,
 			}
 
 			fmt.Println(int(recipientDetail.UserId))
@@ -81,39 +82,8 @@ func CreateTravelOrder(c *gin.Context) {
 				return
 			}
 
-			myTransaction := models.Transaction{
-				UserId:     int(recipientDetail.UserId),
-				ProvinceId: int(recipientDetail.ProvinceId),
-				CityId:     int(recipientDetail.CityId),
-				OfficerId:  int(travelDeliveryInput.OfficerId),
-				DriverId:   int(travelDeliveryInput.DriverId),
-				Email:      recipientDetail.Email,
-				Status:     "pending",
-				Date:       travelDeliveryInput.DepartureDate,
-			}
-
-			if err := config.DB.Create(&myTransaction).Error; err != nil {
-				c.JSON(400, gin.H{
-					"message": err.Error(),
-				})
-				return
-			}
-
-			transactionDetail := models.TransactionDetail{
-				Quantity:      recipientDetail.Quantity,
-				TransactionID: int64(myTransaction.ID),
-				OilID:         travelDeliveryInput.OilId,
-			}
-
-			if err := config.DB.Create(&transactionDetail).Error; err != nil {
-				c.JSON(400, gin.H{
-					"message": err.Error(),
-				})
-				return
-			}
-
-			qrData := strconv.Itoa(int(myTransaction.ID))
-			qrFile, err := utils.GenerateQRCode(qrData)
+			qrData := recipientDetail.TransactionID
+			qrFile, err := utils.GenerateQRCode(strconv.FormatInt(qrData, 10))
 			if err != nil {
 				c.JSON(500, gin.H{
 					"error": err.Error(),
@@ -126,6 +96,16 @@ func CreateTravelOrder(c *gin.Context) {
 			if err != nil {
 				c.JSON(500, gin.H{
 					"error": err.Error(),
+				})
+				return
+			}
+
+			myTransaction := models.Transaction{}
+			fmt.Println(recipientDetail.TransactionID)
+
+			if err := config.DB.Where("id = ?", recipientDetail.TransactionID).First(&myTransaction).Error; err != nil {
+				c.JSON(400, gin.H{
+					"message": err.Error(),
 				})
 				return
 			}
