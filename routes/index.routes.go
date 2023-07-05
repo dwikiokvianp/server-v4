@@ -9,6 +9,7 @@ func Routes(c *gin.Engine) {
 	DriverRoutes(c)
 	UserRoutes(c)
 	CityRoutes(c)
+	DeliveryOrderRoutes(c)
 	WarehouseRoutes(c)
 	ProvinceRoutes(c)
 	CompanyRoutes(c)

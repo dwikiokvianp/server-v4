@@ -15,13 +15,14 @@ type DeliveryOrderWarehouseDetail struct {
 }
 
 type DeliveryOrderRecipientDetail struct {
-	ID              int64  `gorm:"primary_key;auto_increment" json:"id"`
-	DeliveryOrderID int64  `gorm:"not null" json:"delivery_order_id"`
-	TransactionID   int64  `gorm:"not null" json:"transaction_id"`
-	OilId           int64  `gorm:"not null" json:"oil_id"`
-	UserId          int64  `gorm:"not null" json:"user_id"`
-	Email           string `gorm:"not null" json:"email"`
-	Quantity        int64  `json:"quantity"`
-	ProvinceId      int64  `gorm:"not null" json:"province_id"`
-	CityId          int64  `gorm:"not null" json:"city_id"`
+	ID              int64       `gorm:"primary_key;auto_increment" json:"id"`
+	DeliveryOrderID int64       `gorm:"not null" json:"delivery_order_id"`
+	TransactionID   int64       `gorm:"not null" json:"transaction_id"`
+	Transaction     Transaction `json:"transaction"`
+	OilId           int64       `gorm:"not null" json:"oil_id"`
+	UserId          int64       `gorm:"not null" json:"user_id"`
+	Email           string      `gorm:"not null" json:"email"`
+	Quantity        int64       `json:"quantity"`
+	ProvinceId      int64       `gorm:"not null" json:"province_id"`
+	CityId          int64       `gorm:"not null" json:"city_id"`
 }
