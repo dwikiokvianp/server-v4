@@ -343,7 +343,7 @@ func GetTodayV2Transaction(c *gin.Context) {
 	if name != "" {
 		err := config.DB.
 			Preload("Vehicle.VehicleType").
-			Preload("User.Company").Preload("Oil").
+			Preload("User.Company").
 			Preload("User.Detail").
 			Joins("JOIN users ON users.id = transactions.user_id").
 			Where("users.username = ?", name).
@@ -354,7 +354,8 @@ func GetTodayV2Transaction(c *gin.Context) {
 			})
 		}
 	} else {
-		err := config.DB.Preload("Vehicle.VehicleType").Preload("User.Company").Preload("Oil").
+		err := config.DB.Preload("Vehicle.VehicleType").
+			Preload("User.Company").
 			Preload("User.Detail").
 			Where("date = ?", today).Find(&transaction).Error
 		if err != nil {
