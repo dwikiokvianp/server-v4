@@ -30,11 +30,17 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
+	status := "pending"
+	statusQuery := c.Query("status")
+	if statusQuery != "" {
+		status = statusQuery
+	}
+
 	transaction := models.Transaction{
 		UserId:     intUserId,
 		Email:      inputTransaction.Email,
 		OfficerId:  inputTransaction.OfficerId,
-		Status:     "pending",
+		Status:     status,
 		Date:       inputTransaction.Date,
 		CityId:     inputTransaction.CityId,
 		ProvinceId: inputTransaction.ProvinceId,
@@ -74,85 +80,6 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	//qrData := strconv.Itoa(int(transaction.ID))
-	//qrFile, err := utils.GenerateQRCode(qrData)
-	//if err != nil {
-	//	c.JSON(500, gin.H{
-	//		"error": err.Error(),
-	//	})
-	//	return
-	//}
-	//
-	//key := fmt.Sprintf("qrcodes/%v.png", transaction.ID)
-	//qrURL, err := utils.UploadToS3(qrFile, key)
-	//if err != nil {
-	//	c.JSON(500, gin.H{
-	//		"error": err.Error(),
-	//	})
-	//	return
-	//}
-
-	//email := inputTransaction.Email
-	//subject := "QR Code Transaction"
-	//body := `
-	//<html>
-	//<head>
-	//	<style>
-	//		body {
-	//			font-family: Arial, sans-serif;
-	//			background-color: #f2f2f2;
-	//			padding: 20px;
-	//		}
-	//
-	//		h1 {
-	//			color: #333333;
-	//			font-size: 24px;
-	//			font-weight: bold;
-	//			margin-bottom: 20px;
-	//		}
-	//
-	//		p {
-	//			color: #666666;
-	//			font-size: 16px;
-	//			line-height: 1.5;
-	//			margin-bottom: 10px;
-	//		}
-	//
-	//		.qr-code {
-	//			display: block;
-	//			text-align: center;
-	//			margin-bottom: 20px;
-	//		}
-	//
-	//		.qr-code img {
-	//			max-width: 200px;
-	//			height: auto;
-	//		}
-	//	</style>
-	//</head>
-	//<body>
-	//	<p>Tunjukkan QR kode ini kepada petugas untuk mendapatkan layanan.</p>
-	//</body>
-	//</html>
-	//`
-
-	//go func() {
-	//	err = utils.SendEmail(email, subject, body, qrFile)
-	//	if err != nil {
-	//		c.JSON(500, gin.H{
-	//			"error": err.Error(),
-	//		})
-	//		return
-	//	}
-	//}()
-	//transaction.QrCodeUrl = qrURL
-	//if err := config.DB.Save(&transaction).Error; err != nil {
-	//	c.JSON(500, gin.H{
-	//		"error": err.Error(),
-	//	})
-	//	return
-	//}
-
 	c.JSON(200, gin.H{
 		"message": "success create transaction",
 	})
@@ -169,6 +96,11 @@ func GetAllTransactions(c *gin.Context) {
 	pageParam := c.Query("page")
 	if pageParam != "" {
 		page, _ = strconv.Atoi(pageParam)
+	}
+
+	limitParam := c.Query("limit")
+	if limitParam != "" {
+		pageSize, _ = strconv.Atoi(limitParam)
 	}
 
 	statusParam := c.Query("status")
@@ -195,6 +127,7 @@ func GetAllTransactions(c *gin.Context) {
 		Joins("Province").
 		Joins("City").
 		Preload("TransactionDetail").
+		Order("updated_at desc").
 		Find(&transactions).Error
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -336,7 +269,7 @@ func GetTomorrowTransactions() ([]models.Transaction, error) {
 func GetTodayV2Transaction(c *gin.Context) {
 	var transaction []models.Transaction
 
-	today := time.Now().Format("2006-01-02")
+	today := time.Now().UTC().Format("2006-01-02")
 
 	name := c.Query("name")
 
@@ -347,21 +280,25 @@ func GetTodayV2Transaction(c *gin.Context) {
 			Preload("User.Detail").
 			Joins("JOIN users ON users.id = transactions.user_id").
 			Where("users.username = ?", name).
-			Where("date = ?", today).Find(&transaction).Error
+			Where("date = ?", today).
+			Find(&transaction).Error
 		if err != nil {
 			c.JSON(400, gin.H{
 				"error": err.Error(),
 			})
+			return
 		}
 	} else {
 		err := config.DB.Preload("Vehicle.VehicleType").
 			Preload("User.Company").
 			Preload("User.Detail").
-			Where("date = ?", today).Find(&transaction).Error
+			Where("date = ?", today).
+			Find(&transaction).Error
 		if err != nil {
 			c.JSON(400, gin.H{
 				"error": err.Error(),
 			})
+			return
 		}
 	}
 
@@ -369,10 +306,10 @@ func GetTodayV2Transaction(c *gin.Context) {
 		c.JSON(404, gin.H{
 			"message": "Transaction Today Not Found",
 		})
+		return
 	}
 
 	c.JSON(200, gin.H{
 		"data": transaction,
 	})
-
 }

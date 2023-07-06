@@ -131,7 +131,9 @@ func CreateProof(c *gin.Context) {
 	}
 
 	var transaction models.Transaction
-	if err := config.DB.First(&transaction, transactionId).Error; err != nil {
+	if err := config.DB.
+		Preload("TransactionDetail").
+		First(&transaction, transactionId).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Transaction not found",
 		})
@@ -155,12 +157,18 @@ func CreateProof(c *gin.Context) {
 		return
 	}
 
-	go func() {
-		var historyOut models.HistoryOut
+	var historyOut models.HistoryOut
+	fmt.Println(transactionIdInt)
 
-		historyOut.Date = time.Now()
-		historyOut.UserId = transaction.UserId
-		historyOut.TransactionId = transactionIdInt
+	historyOut.Date = time.Now()
+	historyOut.UserId = transaction.UserId
+	historyOut.TransactionId = transactionIdInt
+
+	fmt.Println(transaction.TransactionDetail)
+
+	for _, item := range transaction.TransactionDetail {
+		historyOut.Quantity = int(item.Quantity)
+		historyOut.OilId = int(item.OilID)
 
 		if err := config.DB.Create(&historyOut).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -168,7 +176,7 @@ func CreateProof(c *gin.Context) {
 			})
 			return
 		}
-	}()
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Proof created successfully and transaction status updated to done",
