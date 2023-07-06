@@ -12,7 +12,7 @@ FROM ubuntu:latest AS runtime
 WORKDIR /app
 COPY --from=build /app/binary .
 COPY --from=build /app/.env .
-EXPOSE 8080
+EXPOSE 8081
 
 RUN cd /app
 
