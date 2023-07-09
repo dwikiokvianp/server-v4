@@ -14,6 +14,17 @@ type User struct {
 	CreatedAt int64   `gorm:"autoCreateTime" json:"created_at"`
 	Phone     string  `json:"phone"`
 }
+type UserResponse struct {
+	Id        int             `json:"id"`
+	Username  string          `json:"username"`
+	Email     string          `json:"email"`
+	Phone     string          `json:"phone"`
+	CreatedAt int64           `gorm:"autoCreateTime" json:"created_at"`
+	DetailId  int             `json:"detail_id"`
+	Detail    Detail          `json:"detail"`
+	CompanyID int             `json:"company_id"`
+	Company   CompanyResponse `json:"company"`
+}
 
 type UserInput struct {
 	Username  string `json:"username"`
@@ -22,12 +33,6 @@ type UserInput struct {
 	RoleId    int    `json:"role_id"`
 	DetailId  int    `json:"detail_id"`
 	CompanyID int    `json:"company_id"`
-}
-
-type UserResponse struct {
-	Id       int    `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
 }
 
 type Authentication struct {

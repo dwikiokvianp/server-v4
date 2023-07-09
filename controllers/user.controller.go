@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/dranikpg/dto-mapper"
 	"github.com/gin-gonic/gin"
 	"server-v2/config"
 	"server-v2/models"
@@ -113,6 +114,7 @@ func GetAllUser(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 	err := db.Model(&userList).
+		Select("id", "username", "email", "created_at").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&userList).Error
@@ -123,8 +125,11 @@ func GetAllUser(c *gin.Context) {
 
 	maxPage := (int(count) + pageSize - 1) / pageSize
 
+	var userListResponse []models.UserResponse
+	dto.Map(&userListResponse, &userList)
+
 	c.JSON(200, gin.H{
-		"data":     userList,
+		"data":     userListResponse,
 		"page":     page,
 		"pageSize": pageSize,
 		"total":    maxPage,
@@ -133,10 +138,11 @@ func GetAllUser(c *gin.Context) {
 
 func GetUserById(c *gin.Context) {
 	var user models.User
+	var userResponse models.UserResponse
 	id := c.Param("id")
 
 	err := config.DB.Where("users.id = ?", id).
-		Joins("Role").
+		Select("username", "email", "phone", "detail_id", "company_id").
 		Joins("Detail").
 		Joins("Company").
 		First(&user).Error
@@ -144,8 +150,11 @@ func GetUserById(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+
+	dto.Map(&userResponse, &user)
+
 	c.JSON(200, gin.H{
-		"data": user,
+		"data": userResponse,
 	})
 }
 

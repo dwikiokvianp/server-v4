@@ -10,3 +10,8 @@ type Company struct {
 	CityId         int    `json:"city_id"`
 	CreatedAt      int64  `gorm:"autoCreateTime" json:"created_at"`
 }
+
+type CompanyResponse struct {
+	Id          int    `json:"id"`
+	CompanyName string `json:"companyName"`
+}
