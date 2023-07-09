@@ -126,7 +126,11 @@ func GetAllUser(c *gin.Context) {
 	maxPage := (int(count) + pageSize - 1) / pageSize
 
 	var userListResponse []models.UserResponse
-	dto.Map(&userListResponse, &userList)
+	err = dto.Map(&userListResponse, &userList)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(200, gin.H{
 		"data":     userListResponse,
@@ -151,7 +155,11 @@ func GetUserById(c *gin.Context) {
 		return
 	}
 
-	dto.Map(&userResponse, &user)
+	err = dto.Map(&userResponse, &user)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(200, gin.H{
 		"data": userResponse,
