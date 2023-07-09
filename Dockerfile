@@ -3,7 +3,6 @@ FROM golang AS build
 
 WORKDIR /app
 COPY . .
-RUN go run seed/seed.go && go run seed/seed_regions.go
 RUN go mod tidy
 RUN go build -o binary
 
