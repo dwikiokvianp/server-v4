@@ -9,7 +9,7 @@ type Transaction struct {
 	VehicleId         *int                `gorm:"default:null" json:"vehicle_id"`
 	Vehicle           Vehicle             `gorm:"foreignkey:VehicleId"`
 	OfficerId         int                 `gorm:"not null" json:"officer_id"`
-	Officer           Officer             `gorm:"foreignkey:OfficerId"`
+	Officer           User                `gorm:"foreignkey:OfficerId"`
 	CityId            int                 `gorm:"not null" json:"city_id"`
 	City              City                `gorm:"foreignkey:CityId"`
 	ProvinceId        int                 `gorm:"not null" json:"province_id"`
@@ -21,6 +21,7 @@ type Transaction struct {
 	Status            string              `gorm:"not null" json:"status"`
 	Date              time.Time           `json:"date"`
 	DriverId          int                 `json:"driver_id"`
+	Driver            User                `gorm:"foreignkey:driver" json:"driver"`
 	TransactionDetail []TransactionDetail `json:"transaction_detail"`
 }
 
