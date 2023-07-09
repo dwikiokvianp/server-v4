@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"github.com/dranikpg/dto-mapper"
 	"github.com/gin-gonic/gin"
 	"server-v2/config"
 	"server-v2/models"
@@ -209,9 +210,13 @@ func GetByIdTransaction(c *gin.Context) {
 
 func GetTransactionByUserId(c *gin.Context) {
 	var transaction []models.Transaction
+	var transactionResponse []models.TransactionResponse
 	id := c.Param("id")
 	fmt.Println(id)
-	err := config.DB.Preload("Vehicle.VehicleType").Preload("Oil").Preload("User.Detail").Where("user_id = ?", id).Find(&transaction).Error
+	err := config.DB.
+		Preload("TransactionDetail.Oil").
+		Where("user_id = ?", id).
+		Find(&transaction).Error
 	if err != nil {
 		c.JSON(400, gin.H{
 			"error": err.Error(),
@@ -225,8 +230,16 @@ func GetTransactionByUserId(c *gin.Context) {
 		return
 	}
 
+	err = dto.Map(&transactionResponse, &transaction)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"data": transaction,
+		"data": transactionResponse,
 	})
 }
 

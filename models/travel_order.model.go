@@ -4,13 +4,14 @@ import "time"
 
 type TravelOrder struct {
 	ID                           int64                          `gorm:"primary_key;auto_increment" json:"id"`
-	DriverId                     int64                          `gorm:"not null" json:"driver_id"`
+	DriverId                     int                            `gorm:"not null" json:"driver_id"`
+	Driver                       User                           `json:"driver" gorm:"foreignkey:DriverId"`
 	PickupLocation               string                         `gorm:"not null" json:"pickup_location"`
 	DepartureDate                time.Time                      `gorm:"not null" json:"departure_date"`
 	Message                      string                         `gorm:"not null" json:"message"`
 	Status                       string                         `gorm:"not null" json:"status"`
-	OfficerId                    int64                          `gorm:"not null" json:"officer_id"`
-	Officer                      Officer                        `json:"officer"`
+	OfficerId                    int                            `gorm:"not null" json:"officer_id"`
+	Officer                      User                           `json:"officer" gorm:"foreignkey:OfficerId"`
 	Vehicle                      Vehicle                        `json:"vehicle"`
 	VehicleId                    int64                          `gorm:"not null" json:"vehicle_id"`
 	Quantity                     int64                          `gorm:"not null" json:"quantity"`
@@ -19,8 +20,8 @@ type TravelOrder struct {
 }
 
 type TravelDeliveryInput struct {
-	DriverId        int64                          `gorm:"not null" json:"driver_id" `
-	OfficerId       int64                          `gorm:"not null" json:"officer_id" `
+	DriverId        int                            `gorm:"not null" json:"driver_id" `
+	OfficerId       int                            `gorm:"not null" json:"officer_id" `
 	Quantity        int64                          `gorm:"not null" json:"quantity" `
 	PickupLocation  string                         `gorm:"not null" json:"pickup_location" `
 	DepartureDate   time.Time                      `gorm:"not null" json:"departure_date" `

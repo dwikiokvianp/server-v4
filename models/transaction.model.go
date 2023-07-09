@@ -21,8 +21,14 @@ type Transaction struct {
 	Status            string              `gorm:"not null" json:"status"`
 	Date              time.Time           `json:"date"`
 	DriverId          int                 `json:"driver_id"`
-	Driver            User                `gorm:"foreignkey:driver" json:"driver"`
+	Driver            User                `gorm:"foreignkey:DriverId" json:"driver"`
 	TransactionDetail []TransactionDetail `json:"transaction_detail"`
+}
+
+type TransactionResponse struct {
+	ID                uint64              `gorm:"primary_key:auto_increment" json:"id"`
+	TransactionDetail []TransactionDetail `json:"transaction_detail"`
+	Date              time.Time           `json:"date"`
 }
 
 type TransactionInput struct {
