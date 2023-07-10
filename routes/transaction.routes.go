@@ -15,7 +15,6 @@ func TransactionRoutes(router *gin.Engine) {
 		transactionGroup.POST("/:id", controllers.CreateTransactions)
 		transactionGroup.GET("", controllers.GetAllTransactions)
 		transactionGroup.GET("/:id", controllers.GetByIdTransaction)
-		// transactionGroup.PATCH("", controllers.UpdateTransactionBatch)
 		transactionGroup.GET("/user/:id", controllers.GetTransactionByUserId)
 		transactionGroup.GET("/summary", GetTodayTransactionsHandler)
 		transactionGroup.GET("/tomorrow", GetTomorrowTransactions)
