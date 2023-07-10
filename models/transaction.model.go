@@ -16,7 +16,6 @@ type Transaction struct {
 	Province          Province            `gorm:"foreignkey:ProvinceId"`
 	Email             string              `gorm:"not null" json:"email"`
 	QrCodeUrl         string              `gorm:"not null" json:"qr_code_url"`
-	// PdfUrl         	  string              `gorm:"not null" json:"pdf_url"`
 	CreatedAt         int64               `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt         int64               `gorm:"autoUpdateTime" json:"updated_at"`
 	Status            string              `gorm:"not null" json:"status"`
