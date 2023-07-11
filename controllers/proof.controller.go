@@ -14,14 +14,14 @@ import (
 	// _ "image/jpeg"
 	// _ "image/png"
 
-	"server-v2/utils"
-	"github.com/jung-kurt/gofpdf"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gin-gonic/gin"
 	"github.com/jaytaylor/html2text"
+	"github.com/jung-kurt/gofpdf"
 	"net/http"
+	"server-v2/utils"
 )
 
 func uploadImageToS3(sess *session.Session, bucket string, fileHeader *multipart.FileHeader) (string, error) {
@@ -81,14 +81,6 @@ func CreateProof(c *gin.Context) {
 		return
 	}
 
-	fileSignature, err := c.FormFile("signature")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to read signature from request",
-		})
-		return
-	}
-
 	description := c.PostForm("description")
 
 	transactionId := c.Param("id")
@@ -137,13 +129,6 @@ func CreateProof(c *gin.Context) {
 	}
 	proof.PhotoTangkiURL = photoTangkiURL
 
-	signatureURL, err := uploadImageToS3(sess, os.Getenv("S3_BUCKET_NAME"), fileSignature)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to upload signature file to S3",
-		})
-		return
-	}
 	// proof.SignatureURL = signatureURL
 
 	err = config.DB.Create(&proof).Error
@@ -166,12 +151,12 @@ func CreateProof(c *gin.Context) {
 	}
 
 	var company models.Company
-   if err := config.DB.First(&company).Error; err != nil {
-      c.JSON(http.StatusInternalServerError, gin.H{
-         "error": "Failed to retrieve company information",
-      })
-      return
-   }
+	if err := config.DB.First(&company).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve company information",
+		})
+		return
+	}
 
 	transaction.Status = "done"
 
@@ -201,13 +186,13 @@ func CreateProof(c *gin.Context) {
 
 	for _, item := range transaction.TransactionDetail {
 		historyOut := models.HistoryOut{
-			Date:           time.Now(),
-			UserId:         transaction.UserId,
-			TransactionId:  transactionIdInt,
-			Quantity:       int(item.Quantity),
-			OilId:          int(item.OilID),
+			Date:          time.Now(),
+			UserId:        transaction.UserId,
+			TransactionId: transactionIdInt,
+			Quantity:      int(item.Quantity),
+			OilId:         int(item.OilID),
 		}
-	
+
 		if err := config.DB.Create(&historyOut).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Failed to save history to database",
@@ -215,7 +200,7 @@ func CreateProof(c *gin.Context) {
 			return
 		}
 	}
-	
+
 	// Generate the invoice PDF with the signature
 	invoicePDF, err := GenerateInvoicePDF(*proof, transaction, company)
 	if err != nil {
