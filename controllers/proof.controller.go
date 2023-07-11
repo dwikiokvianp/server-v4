@@ -257,34 +257,34 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	pdf.SetFont("Arial", "", 12)
 
 	// Display proof details
-	pdf.Cell(40, 10, "Transaction Status:")
+	pdf.Cell(40, 10, "company:")
 	pdf.Cell(0, 10, company.CompanyName)
+	pdf.Ln(8)
+
+	pdf.Cell(40, 10, "Diterbitkan:")
+	pdf.Cell(0, 10, proof.CreatedAt.Format("2006-01-02"))
 	pdf.Ln(8)
 
 	pdf.Cell(40, 10, "Description:")
 	pdf.MultiCell(0, 10, descriptionText, "", "", false)
 	pdf.Ln(8)
 
-	// Display photo URLs
-	pdf.Cell(40, 10, "Photo KTP URL:")
-	pdf.Cell(0, 10, proof.PhotoKTPURL)
-	pdf.Ln(8)
+	// // Display photo URLs
+	// pdf.Cell(40, 10, "Photo KTP URL:")
+	// pdf.Cell(0, 10, proof.PhotoKTPURL)
+	// pdf.Ln(8)
 
-	pdf.Cell(40, 10, "Photo Orang URL:")
-	pdf.Cell(0, 10, proof.PhotoOrangURL)
-	pdf.Ln(8)
+	// pdf.Cell(40, 10, "Photo Orang URL:")
+	// pdf.Cell(0, 10, proof.PhotoOrangURL)
+	// pdf.Ln(8)
 
-	pdf.Cell(40, 10, "Photo Tangki URL:")
-	pdf.Cell(0, 10, proof.PhotoTangkiURL)
-	pdf.Ln(8)
+	// pdf.Cell(40, 10, "Photo Tangki URL:")
+	// pdf.Cell(0, 10, proof.PhotoTangkiURL)
+	// pdf.Ln(8)
 
 	// Display transaction details
 	pdf.Cell(40, 10, "Transaction Status:")
 	pdf.Cell(0, 10, transaction.Status)
-	pdf.Ln(8)
-
-	pdf.Cell(40, 10, "Transaction Date:")
-	pdf.Cell(0, 10, transaction.Date.Format("2006-01-02"))
 	pdf.Ln(8)
 
 	// Output the PDF as bytes
@@ -296,15 +296,6 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 
 	return buf.Bytes(), nil
 }
-
-// func getImageDimensions(file multipart.File) (int, int, float64, float64) {
-// 	img, _, err := image.DecodeConfig(file)
-// 	if err != nil {
-// 		return 0, 0, 0, 0
-// 	}
-
-// 	return img.Width, img.Height, float64(img.Width), float64(img.Height)
-// }
 
 func GetAllProofs(c *gin.Context) {
 	var proofs []models.Proof
