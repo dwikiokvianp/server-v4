@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -28,7 +27,7 @@ type ProvinceData struct {
 	Kota     []string `json:"kota"`
 }
 
-func seedRegion() {
+func main() {
 	failedLoadEnv := godotenv.Load("./.env")
 	if failedLoadEnv != nil {
 		log.Fatal("Error loading .env file")
@@ -49,7 +48,7 @@ func seedRegion() {
 		log.Fatalf("Failed to perform database migration: %v", err)
 	}
 
-	jsonData, err := ioutil.ReadFile("./seed/regions.json")
+	jsonData, err := os.ReadFile("./seed/regions.json")
 	if err != nil {
 		log.Fatalf("Failed to read JSON data: %v", err)
 	}
