@@ -26,7 +26,7 @@ func main() {
 	server.Use(cors.New(myCorsConfig))
 	server.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "Hello mantap mantap from github actions",
+			"message": "Github action test",
 		})
 	})
 	routes.Routes(server)
