@@ -241,11 +241,11 @@ func main() {
 	generateVehicle(10, 1)
 	generateVehicle(10, 2)
 
-	GenerateFakeUsers(100, 1)
-	GenerateFakeUsers(100, 2)
-	GenerateFakeUsers(100, 3)
-	GenerateFakeUsers(100, 4)
-	GenerateFakeUsers(100, 5)
+	GenerateFakeUsers(10, 1)
+	GenerateFakeUsers(10, 2)
+	GenerateFakeUsers(10, 3)
+	GenerateFakeUsers(10, 4)
+	GenerateFakeUsers(10, 5)
 	generateSomeUser(User{
 		Username:  "admin",
 		Password:  "admin",
