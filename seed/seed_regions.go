@@ -28,7 +28,7 @@ type ProvinceData struct {
 	Kota     []string `json:"kota"`
 }
 
-func main() {
+func seedRegion() {
 	failedLoadEnv := godotenv.Load("./.env")
 	if failedLoadEnv != nil {
 		log.Fatal("Error loading .env file")

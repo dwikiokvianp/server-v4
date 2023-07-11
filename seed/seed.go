@@ -214,6 +214,12 @@ func main() {
 	if failedLoadEnv != nil {
 		fmt.Println("Error loading .env file")
 	}
+
+	errDropDb := config.DropDatabase(os.Getenv("DB_URL"))
+	if errDropDb != nil {
+		fmt.Println(errDropDb)
+	}
+
 	err := config.InitDatabase(os.Getenv("DB_URL"))
 	if err != nil {
 		fmt.Println(err)
@@ -283,5 +289,6 @@ func main() {
 		Phone:     "08123456789",
 	})
 	generateDrivers(100)
+
 	fmt.Println("Migration finished")
 }

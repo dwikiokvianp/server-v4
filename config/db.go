@@ -26,6 +26,22 @@ func InitDatabase(url string) *gorm.DB {
 	return nil
 }
 
+func DropDatabase(url string) *gorm.DB {
+	db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	dropError := db.Migrator().DropTable(modelsToMigrate...)
+	if dropError != nil {
+		log.Fatalln(err)
+		return nil
+	}
+
+	return nil
+}
+
 var modelsToMigrate = []interface{}{
 	&models.Role{},
 	&models.DeliveryOrder{},
