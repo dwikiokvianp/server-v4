@@ -44,4 +44,8 @@ jobs:
           to: dwikiokvianp1999@gmail.com, dwikiokvian1412@gmail.com
           from: Luke Skywalker
           body: |
+            A user with the following email address has just triggered a build:
+            ${{ github.event.head_commit.author.email }}
+            Here's the commit message:
+            ${{ github.event.head_commit.message }}
             Build job of ${{ github.repository }} completed with status: ${{ job.status }}
