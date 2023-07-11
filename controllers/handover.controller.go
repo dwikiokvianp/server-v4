@@ -20,6 +20,10 @@ func CreateHandover(c *gin.Context) {
 	idInt, _ := strconv.Atoi(id)
 	handover.OfficerId = idInt
 
+	var handoverUser models.Handover
+
+	handover.Status = "pending"
+
 	if err := config.DB.Create(&handover).Error; err != nil {
 		c.JSON(500, gin.H{
 			"error": "Error here in the create handover",
@@ -28,7 +32,8 @@ func CreateHandover(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"data": handover,
+		"data":     "success create handover",
+		"Handover": handoverUser,
 	})
 }
 

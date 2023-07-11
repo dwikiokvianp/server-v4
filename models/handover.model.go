@@ -9,4 +9,5 @@ type Handover struct {
 	OfficerId      int    `json:"officer_id"`
 	Officer        User   `json:"officer" gorm:"foreignKey:OfficerId"`
 	Condition      string `json:"condition"`
+	Status         string `json:"status"`
 }
