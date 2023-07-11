@@ -19,15 +19,28 @@ jobs:
           # For example:
 #          go build -o binary
 
-      - name: Execute remote SSH commands
-        uses: appleboy/ssh-action@v0.1.10
+#      - name: Execute remote SSH commands
+#        uses: appleboy/ssh-action@v0.1.10
+#        with:
+#          host: ${{ secrets.HOST }}
+#          username: ${{ secrets.USERNAME }}
+#          passphrase: ${{ secrets.PASSPHRASE }}
+#          key: ${{ secrets.KEY }}
+#          script: |
+#            echo "Deploying to ${{ secrets.HOST }}"
+#            cd /home/dwiki/project/serverv4
+#            git pull origin
+#            sudo docker compose up --build -d
+      - name: Send mail
+        uses: dawidd6/action-send-mail@v3
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          passphrase: ${{ secrets.PASSPHRASE }}
-          key: ${{ secrets.KEY }}
-          script: |
-            echo "Deploying to ${{ secrets.HOST }}"
-            cd /home/dwiki/project/serverv4
-            git pull origin 
-            sudo docker compose up --build -d
+          connection_url: ${{secrets.MAIL_CONNECTION}}
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{secrets.MAIL_USERNAME}}
+          password: ${{secrets.MAIL_PASSWORD}}
+          subject: Github Actions job result
+          to: dwikiokvianp1999@gmail.com, dwikiokvian1412@gmail.com
+          from: Luke Skywalker # <user@example.com>
+          body: Build job of ${{github.repository}} completed successfully!
