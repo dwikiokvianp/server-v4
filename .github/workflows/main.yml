@@ -17,20 +17,20 @@ jobs:
         run: |
           # Add any build commands specific to your application
           # For example:
-#          go build -o binary
+          go build -o binary
 
-#      - name: Execute remote SSH commands
-#        uses: appleboy/ssh-action@v0.1.10
-#        with:
-#          host: ${{ secrets.HOST }}
-#          username: ${{ secrets.USERNAME }}
-#          passphrase: ${{ secrets.PASSPHRASE }}
-#          key: ${{ secrets.KEY }}
-#          script: |
-#            echo "Deploying to ${{ secrets.HOST }}"
-#            cd /home/dwiki/project/serverv4
-#            git pull origin
-#            sudo docker compose up --build -d
+      - name: Execute remote SSH commands
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+          key: ${{ secrets.KEY }}
+          script: |
+            echo "Deploying to ${{ secrets.HOST }}"
+            cd /home/dwiki/project/serverv4
+            git pull origin
+            sudo docker compose up --build -d
       - name: Send mail
         uses: dawidd6/action-send-mail@v3
         with:
