@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bytes"
 	"fmt"
 	"mime/multipart"
 	"os"
@@ -10,10 +11,13 @@ import (
 	"strconv"
 	"time"
 
+	"server-v2/utils"
+	"github.com/jung-kurt/gofpdf"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gin-gonic/gin"
+	"github.com/jaytaylor/html2text"
 	"net/http"
 )
 
@@ -75,6 +79,7 @@ func CreateProof(c *gin.Context) {
 	}
 
 	description := c.PostForm("description")
+	// signature := c.PostForm("signature")
 
 	transactionId := c.Param("id")
 
@@ -133,7 +138,8 @@ func CreateProof(c *gin.Context) {
 	var transaction models.Transaction
 	if err := config.DB.
 		Preload("TransactionDetail").
-		First(&transaction, transactionId).Error; err != nil {
+		First(&transaction, transactionIdInt).
+		Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Transaction not found",
 		})
@@ -178,10 +184,101 @@ func CreateProof(c *gin.Context) {
 		}
 	}
 
+	// Generate the invoice PDF
+	invoicePDF, err := GenerateInvoicePDF(*proof, transaction)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to generate invoice PDF",
+		})
+		return
+	}
+
+	// Upload the PDF to S3
+	invoiceKey := fmt.Sprintf("invoices/%v.pdf", proof.ID)
+	invoiceURL, err := utils.UploadPdfToS3(invoicePDF, invoiceKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to upload invoice PDF to S3",
+		})
+		return
+	}
+
+	// Save the invoice URL in the proof
+	proof.InvoiceURL = invoiceURL
+	err = config.DB.Save(&proof).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to save invoice URL in the proof",
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Proof created successfully and transaction status updated to done",
 		"data":    proof,
 	})
+}
+
+func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction) ([]byte, error) {
+	// Convert description from HTML to plain text
+	descriptionText, err := html2text.FromString(proof.Description)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a new PDF object
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.SetTitle("Invoice", true)
+	pdf.SetAuthor("Your Company", true)
+	pdf.AddPage()
+
+	// Set font and size for the title
+	pdf.SetFont("Arial", "B", 18)
+	pdf.Cell(0, 10, "Invoice")
+	pdf.Ln(12)
+
+	// Set font and size for the content
+	pdf.SetFont("Arial", "", 12)
+
+	// Display proof details
+	pdf.Cell(40, 10, "Transaction ID:")
+	pdf.Cell(0, 10, strconv.Itoa(proof.TransactionID))
+	pdf.Ln(8)
+
+	pdf.Cell(40, 10, "Description:")
+	pdf.MultiCell(0, 10, descriptionText, "", "", false)
+	pdf.Ln(8)
+
+	// Display photo URLs
+	pdf.Cell(40, 10, "Photo KTP URL:")
+	pdf.Cell(0, 10, proof.PhotoKTPURL)
+	pdf.Ln(8)
+
+	pdf.Cell(40, 10, "Photo Orang URL:")
+	pdf.Cell(0, 10, proof.PhotoOrangURL)
+	pdf.Ln(8)
+
+	pdf.Cell(40, 10, "Photo Tangki URL:")
+	pdf.Cell(0, 10, proof.PhotoTangkiURL)
+	pdf.Ln(8)
+
+	// Display transaction details
+	pdf.Cell(40, 10, "Transaction Status:")
+	pdf.Cell(0, 10, transaction.Status)
+	pdf.Ln(8)
+
+	pdf.Cell(40, 10, "Transaction Date:")
+	pdf.Cell(0, 10, transaction.Date.Format("2006-01-02"))
+	pdf.Ln(8)
+
+	// Output the PDF as bytes
+	var buf bytes.Buffer
+	err = pdf.Output(&buf)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
 
 func GetAllProofs(c *gin.Context) {
@@ -231,5 +328,4 @@ func GetProofByTransactionId(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data": proofs,
 	})
-
 }

@@ -3,22 +3,27 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"mime/multipart"
-	"os"
-
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"os"
 )
 
-// UploadPDFToS3 mengunggah file PDF ke layanan S3
-func UploadPDFToS3(file *multipart.FileHeader, key string) (string, error) {
-	// Ambil konfigurasi AWS dari environment variables
-	region := os.Getenv("AWS_REGION")    
-	bucketName := os.Getenv("S3_BUCKET_NAME")   
-	endpointURL := os.Getenv("S3_BUCKET_URL") 
+func UploadPdfToS3(pdf []byte, key string) (string, error) {
+	// Retrieve AWS region from environment variable
+	region := os.Getenv("AWS_REGION")
+	if region == "" {
+		return "", fmt.Errorf("AWS region not specified")
+	}
 
-	// Buat session AWS
+	// Retrieve S3 bucket name from environment variable
+	bucket := os.Getenv("S3_BUCKET_NAME")
+	if bucket == "" {
+		return "", fmt.Errorf("S3 bucket name not specified")
+	}
+
+	// Create a new AWS session
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region),
 	})
@@ -26,43 +31,24 @@ func UploadPDFToS3(file *multipart.FileHeader, key string) (string, error) {
 		return "", err
 	}
 
-	// Buat layanan S3
+	// Create an S3 client
 	svc := s3.New(sess)
 
-	// Buka file PDF
-	pdfFile, err := file.Open()
+	// Upload the PDF to S3
+	_, err = svc.PutObject(&s3.PutObjectInput{
+		Body:   bytes.NewReader(pdf),
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
 	if err != nil {
-		return "", err
-	}
-	defer pdfFile.Close()
-
-	// Baca file PDF
-	buffer := make([]byte, file.Size)
-	_, err = pdfFile.Read(buffer)
-	if err != nil {
-		return "", err
-	}
-
-	// Tentukan metadata file
-	contentType := "application/pdf"
-
-	// Buat objek PutObjectInput untuk mengunggah file ke S3
-	input := &s3.PutObjectInput{
-		Bucket:      aws.String(bucketName),
-		Key:         aws.String(key),
-		ACL:         aws.String("public-read"), // Opsi ini memberikan akses publik ke file yang diunggah, sesuaikan dengan kebutuhan keamanan Anda
-		Body:        bytes.NewReader(buffer),
-		ContentType: aws.String(contentType),
-	}
-
-	// Unggah file ke S3
-	_, err = svc.PutObject(input)
-	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok {
+			return "", fmt.Errorf("S3 upload error: %v, %v", awsErr.Code(), awsErr.Message())
+		}
 		return "", err
 	}
 
-	// Dapatkan URL publik untuk file yang diunggah
-	url := fmt.Sprintf("%s/%s", endpointURL, key)
+	// Generate the URL for the uploaded PDF
+	pdfURL := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", bucket, key)
 
-	return url, nil
+	return pdfURL, nil
 }
