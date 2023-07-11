@@ -11,14 +11,14 @@ import (
 	"strconv"
 	"time"
 
-	"server-v2/utils"
-	"github.com/jung-kurt/gofpdf"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gin-gonic/gin"
 	"github.com/jaytaylor/html2text"
+	"github.com/jung-kurt/gofpdf"
 	"net/http"
+	"server-v2/utils"
 )
 
 func uploadImageToS3(sess *session.Session, bucket string, fileHeader *multipart.FileHeader) (string, error) {
@@ -127,6 +127,15 @@ func CreateProof(c *gin.Context) {
 	}
 	proof.PhotoTangkiURL = photoTangkiURL
 
+	signatureURL, err := uploadImageToS3(sess, os.Getenv("S3_BUCKET_NAME"), fileSignature)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to upload signature file to S3",
+		})
+		return
+	}
+	// proof.SignatureURL = signatureURL
+
 	err = config.DB.Create(&proof).Error
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -144,6 +153,14 @@ func CreateProof(c *gin.Context) {
 		})
 		return
 	}
+
+	var company models.Company
+   if err := config.DB.First(&company).Error; err != nil {
+      c.JSON(http.StatusInternalServerError, gin.H{
+         "error": "Failed to retrieve company information",
+      })
+      return
+   }
 
 	transaction.Status = "done"
 
@@ -172,9 +189,14 @@ func CreateProof(c *gin.Context) {
 	fmt.Println(transaction.TransactionDetail)
 
 	for _, item := range transaction.TransactionDetail {
-		historyOut.Quantity = int(item.Quantity)
-		historyOut.OilId = int(item.OilID)
-
+		historyOut := models.HistoryOut{
+			Date:           time.Now(),
+			UserId:         transaction.UserId,
+			TransactionId:  transactionIdInt,
+			Quantity:       int(item.Quantity),
+			OilId:          int(item.OilID),
+		}
+	
 		if err := config.DB.Create(&historyOut).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Failed to save history to database",
@@ -182,14 +204,15 @@ func CreateProof(c *gin.Context) {
 			return
 		}
 	}
-		// Generate the invoice PDF
-		invoicePDF, err := GenerateInvoicePDF(*proof)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to generate invoice PDF",
-			})
-			return
-		}
+	
+	// Generate the invoice PDF with the signature
+	invoicePDF, err := GenerateInvoicePDF(*proof, transaction, company)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to generate invoice PDF",
+		})
+		return
+	}
 
 		// Upload the PDF to S3
 		invoiceKey := fmt.Sprintf("invoices/%v.pdf", proof.ID)
