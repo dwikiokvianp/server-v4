@@ -10,6 +10,9 @@ import (
 	"server-v2/models"
 	"strconv"
 	"time"
+	// "image"
+	// _ "image/jpeg"
+	// _ "image/png"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -79,7 +82,6 @@ func CreateProof(c *gin.Context) {
 	}
 
 	description := c.PostForm("description")
-	// signature := c.PostForm("signature")
 
 	transactionId := c.Param("id")
 
@@ -127,13 +129,6 @@ func CreateProof(c *gin.Context) {
 	}
 	proof.PhotoTangkiURL = photoTangkiURL
 
-	signatureURL, err := uploadImageToS3(sess, os.Getenv("S3_BUCKET_NAME"), fileSignature)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to upload signature file to S3",
-		})
-		return
-	}
 	// proof.SignatureURL = signatureURL
 
 	err = config.DB.Create(&proof).Error
@@ -143,11 +138,12 @@ func CreateProof(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	var transaction models.Transaction
 	if err := config.DB.
 		Preload("TransactionDetail").
-		First(&transaction, transactionId).Error; err != nil {
+		First(&transaction, transactionIdInt).
+		Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Transaction not found",
 		})
@@ -155,12 +151,12 @@ func CreateProof(c *gin.Context) {
 	}
 
 	var company models.Company
-   if err := config.DB.First(&company).Error; err != nil {
-      c.JSON(http.StatusInternalServerError, gin.H{
-         "error": "Failed to retrieve company information",
-      })
-      return
-   }
+	if err := config.DB.First(&company).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve company information",
+		})
+		return
+	}
 
 	transaction.Status = "done"
 
@@ -190,13 +186,13 @@ func CreateProof(c *gin.Context) {
 
 	for _, item := range transaction.TransactionDetail {
 		historyOut := models.HistoryOut{
-			Date:           time.Now(),
-			UserId:         transaction.UserId,
-			TransactionId:  transactionIdInt,
-			Quantity:       int(item.Quantity),
-			OilId:          int(item.OilID),
+			Date:          time.Now(),
+			UserId:        transaction.UserId,
+			TransactionId: transactionIdInt,
+			Quantity:      int(item.Quantity),
+			OilId:         int(item.OilID),
 		}
-	
+
 		if err := config.DB.Create(&historyOut).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Failed to save history to database",
@@ -204,7 +200,7 @@ func CreateProof(c *gin.Context) {
 			return
 		}
 	}
-	
+
 	// Generate the invoice PDF with the signature
 	invoicePDF, err := GenerateInvoicePDF(*proof, transaction, company)
 	if err != nil {
@@ -214,33 +210,32 @@ func CreateProof(c *gin.Context) {
 		return
 	}
 
-		// Upload the PDF to S3
-		invoiceKey := fmt.Sprintf("invoices/%v.pdf", proof.ID)
-		invoiceURL, err := utils.UploadPdfToS3(invoicePDF, invoiceKey)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to upload invoice PDF to S3",
-			})
-			return
-		}
+	// Upload the PDF to S3
+	invoiceKey := fmt.Sprintf("invoices/%v.pdf", proof.ID)
+	invoiceURL, err := utils.UploadPdfToS3(invoicePDF, invoiceKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to upload invoice PDF to S3",
+		})
+		return
+	}
 
-		// Save the invoice URL in the proof
-		proof.InvoiceURL = invoiceURL
-		err = config.DB.Save(&proof).Error
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to save invoice URL in the proof",
-			})
-			return
-		}
+	// Save the invoice URL in the proof
+	proof.InvoiceURL = invoiceURL
+	err = config.DB.Save(&proof).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to save invoice URL in the proof",
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Proof created successfully and transaction status updated to done",
 	})
 }
 
-
-func GenerateInvoicePDF(proof models.Proof) ([]byte, error) {
+func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, company models.Company) ([]byte, error) {
 	// Convert description from HTML to plain text
 	descriptionText, err := html2text.FromString(proof.Description)
 	if err != nil {
@@ -262,40 +257,34 @@ func GenerateInvoicePDF(proof models.Proof) ([]byte, error) {
 	pdf.SetFont("Arial", "", 12)
 
 	// Display proof details
-	pdf.Cell(40, 10, "Transaction ID:")
-	pdf.Cell(0, 10, strconv.Itoa(proof.TransactionID))
+	pdf.Cell(40, 10, "company:")
+	pdf.Cell(0, 10, company.CompanyName)
+	pdf.Ln(8)
+
+	pdf.Cell(40, 10, "Diterbitkan:")
+	pdf.Cell(0, 10, proof.CreatedAt.Format("2006-01-02"))
 	pdf.Ln(8)
 
 	pdf.Cell(40, 10, "Description:")
 	pdf.MultiCell(0, 10, descriptionText, "", "", false)
 	pdf.Ln(8)
 
-	// Display photo URLs
-	pdf.Cell(40, 10, "Photo KTP URL:")
-	pdf.Cell(0, 10, proof.PhotoKTPURL)
-	pdf.Ln(8)
+	// // Display photo URLs
+	// pdf.Cell(40, 10, "Photo KTP URL:")
+	// pdf.Cell(0, 10, proof.PhotoKTPURL)
+	// pdf.Ln(8)
 
-	pdf.Cell(40, 10, "Photo Orang URL:")
-	pdf.Cell(0, 10, proof.PhotoOrangURL)
-	pdf.Ln(8)
+	// pdf.Cell(40, 10, "Photo Orang URL:")
+	// pdf.Cell(0, 10, proof.PhotoOrangURL)
+	// pdf.Ln(8)
 
-	pdf.Cell(40, 10, "Photo Tangki URL:")
-	pdf.Cell(0, 10, proof.PhotoTangkiURL)
-	pdf.Ln(8)
-
-	// Fetch transaction data
-	var transaction models.Transaction
-	if err := config.DB.Preload("TransactionDetail").First(&transaction, proof.TransactionID).Error; err != nil {
-		return nil, err
-	}
+	// pdf.Cell(40, 10, "Photo Tangki URL:")
+	// pdf.Cell(0, 10, proof.PhotoTangkiURL)
+	// pdf.Ln(8)
 
 	// Display transaction details
 	pdf.Cell(40, 10, "Transaction Status:")
 	pdf.Cell(0, 10, transaction.Status)
-	pdf.Ln(8)
-
-	pdf.Cell(40, 10, "Transaction Date:")
-	pdf.Cell(0, 10, transaction.Date.Format("2006-01-02"))
 	pdf.Ln(8)
 
 	// Output the PDF as bytes
@@ -307,7 +296,6 @@ func GenerateInvoicePDF(proof models.Proof) ([]byte, error) {
 
 	return buf.Bytes(), nil
 }
-	
 
 func GetAllProofs(c *gin.Context) {
 	var proofs []models.Proof
@@ -356,5 +344,4 @@ func GetProofByTransactionId(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data": proofs,
 	})
-
 }
