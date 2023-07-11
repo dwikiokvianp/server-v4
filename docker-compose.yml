@@ -7,8 +7,6 @@ services:
       context: .
     ports:
       - "8081:8081"
-    depends_on:
-      - pg
   nginx:
     image: nginx
     volumes:
@@ -17,11 +15,3 @@ services:
       - "80:80"
     depends_on:
       - myapp
-  pg:
-    image: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-    ports:
-      - "5432:5432"
