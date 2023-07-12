@@ -61,7 +61,6 @@ var modelsToMigrate = []interface{}{
 	&models.HistoryIn{},
 	&models.Detail{},
 	&models.Storage{},
-	&models.Driver{},
 	&models.Proof{},
 	&models.DeliveryOrderRecipientDetail{},
 	&models.DeliveryOrderWarehouseDetail{},
