@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"net/http"
@@ -29,7 +28,6 @@ func AuthMiddleware() gin.HandlerFunc {
 			return []byte(os.Getenv("SECRET_KEY")), nil
 		})
 		if err != nil || !token.Valid {
-			fmt.Println("Token parsing error:", err) // Debugging information
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			return
 		}
