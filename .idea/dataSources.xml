@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="postgres@localhost" uuid="5854df2c-7405-4807-8412-6d162ee41319">
+    <data-source source="LOCAL" name="postgres local docker 5433" uuid="5854df2c-7405-4807-8412-6d162ee41319">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://localhost:5433/postgres</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="postgres@192.168.1.83" uuid="0e828599-251a-475f-b50c-d7643e3d16fd">
+    <data-source source="LOCAL" name="postgres kosan" uuid="0e828599-251a-475f-b50c-d7643e3d16fd">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>

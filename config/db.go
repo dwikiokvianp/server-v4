@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/golang-jwt/jwt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -8,6 +9,7 @@ import (
 )
 
 var DB *gorm.DB
+var JWTSecret string
 
 func InitDatabase(url string) *gorm.DB {
 	db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
@@ -65,4 +67,11 @@ var modelsToMigrate = []interface{}{
 	&models.DeliveryOrderRecipientDetail{},
 	&models.DeliveryOrderWarehouseDetail{},
 	&models.Handover{},
+}
+
+type JWTClaim struct {
+	Username string `json:"username"`
+	UserId   uint   `json:"userId"`
+	Role     string `json:"role"`
+	jwt.StandardClaims
 }
