@@ -40,9 +40,9 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		userIDFloatet := claims["id"]
+		userID := claims["id"]
 
-		c.Set("id", userIDFloatet)
+		c.Set("id", userID)
 
 		c.Next()
 	}
