@@ -281,9 +281,25 @@ func main() {
 		Phone:     "08123456789",
 	})
 	generateSomeUser(User{
-		Username:  "driver",
-		Password:  "driver",
-		Email:     "driver@gmail.com",
+		Username:  "driver1",
+		Password:  "driver1",
+		Email:     "driver1@gmail.com",
+		RoleId:    5,
+		CompanyID: 1,
+		Phone:     "08123456789",
+	})
+	generateSomeUser(User{
+		Username:  "driver2",
+		Password:  "driver2",
+		Email:     "driver2@gmail.com",
+		RoleId:    5,
+		CompanyID: 1,
+		Phone:     "08123456789",
+	})
+	generateSomeUser(User{
+		Username:  "driver3",
+		Password:  "driver3",
+		Email:     "driver3@gmail.com",
 		RoleId:    5,
 		CompanyID: 1,
 		Phone:     "08123456789",

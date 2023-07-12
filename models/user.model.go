@@ -26,6 +26,12 @@ type UserResponse struct {
 	Company   CompanyResponse `json:"company"`
 }
 
+type UserMinimumResponse struct {
+	Id       int    `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
 type UserInput struct {
 	Username  string `json:"username"`
 	Password  string `json:"password"`

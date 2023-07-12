@@ -8,7 +8,7 @@ import (
 func HandoverRoutes(c *gin.Engine) {
 	handoverGroup := c.Group("handovers")
 	{
-		handoverGroup.POST("/:id", controllers.CreateHandover)
-		handoverGroup.GET("/:id", controllers.GetHandoverById)
+		handoverGroup.POST("", controllers.CreateHandover)
+		handoverGroup.GET("", controllers.GetHandoverById)
 	}
 }
