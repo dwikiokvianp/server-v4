@@ -56,7 +56,13 @@ func GetHandoverById(c *gin.Context) {
 		return
 	}
 
-	dto.Map(&handoverResponse, &handover)
+	err := dto.Map(&handoverResponse, &handover)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": "Error here in the get handover by id",
+		})
+		return
+	}
 
 	c.JSON(200, gin.H{
 		"data": handoverResponse,
