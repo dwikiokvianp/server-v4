@@ -10,6 +10,8 @@ import (
 	"server-v2/models"
 	"strconv"
 	"time"
+	"strings"
+	// "io/ioutil"
 	// "image"
 	// _ "image/jpeg"
 	// _ "image/png"
@@ -18,7 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gin-gonic/gin"
-	"github.com/jaytaylor/html2text"
 	"github.com/jung-kurt/gofpdf"
 	"net/http"
 	"server-v2/utils"
@@ -220,6 +221,61 @@ func CreateProof(c *gin.Context) {
 		return
 	}
 
+	email := transaction.Email
+	subject := "Bukti Transaction"
+	body := `
+	<html>
+	<head>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				background-color: #f2f2f2;
+				padding: 20px;
+			}
+
+			h1 {
+				color: #333333;
+				font-size: 24px;
+				font-weight: bold;
+				margin-bottom: 20px;
+			}
+
+			p {
+				color: #666666;
+				font-size: 16px;
+				line-height: 1.5;
+				margin-bottom: 10px;
+			}
+
+			.qr-code {
+				display: block;
+				text-align: center;
+				margin-bottom: 20px;
+			}
+
+			.qr-code img {
+				max-width: 200px;
+				height: auto;
+			}
+		</style>
+	</head>
+	<body>
+		<p>Bukti Transactions</p>
+	</body>
+	</html>
+	`
+
+	go func() {
+		err = utils.SendEmail(email, subject, body, invoiceURL)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+	}()
+
+
 	// Save the invoice URL in the proof
 	proof.InvoiceURL = invoiceURL
 	err = config.DB.Save(&proof).Error
@@ -236,12 +292,6 @@ func CreateProof(c *gin.Context) {
 }
 
 func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, company models.Company) ([]byte, error) {
-	// Convert description from HTML to plain text
-	descriptionText, err := html2text.FromString(proof.Description)
-	if err != nil {
-		return nil, err
-	}
-
 	// Create a new PDF object
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetTitle("Invoice", true)
@@ -257,30 +307,43 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	pdf.SetFont("Arial", "", 12)
 
 	// Display proof details
-	pdf.Cell(40, 10, "company:")
-	pdf.Cell(0, 10, company.CompanyName)
+	pdf.SetFont("Arial", "B", 12)
+	pdf.Cell(40, 10, "Company:")
+	pdf.SetFont("Arial", "", 12)
+	pdf.Cell(40, 10, company.CompanyName)
 	pdf.Ln(8)
+
+	pdf.SetFont("Arial", "B", 12)
+	pdf.Cell(40, 10, "Address:")
+
+	cleanAddress := strings.Replace(company.Address, "%68", "", -1)
+
+	pdf.SetFont("Arial", "", 12)
+	pdf.Cell(0, 10, cleanAddress)
+	pdf.Ln(12)
+
+	pdf.SetFont("Arial", "B", 12)
+	pdf.Cell(40, 10, "Email:")
+	pdf.SetFont("Arial", "", 12)
+	pdf.Cell(40, 10, transaction.Email)
+	pdf.Ln(12)
 
 	pdf.Cell(40, 10, "Diterbitkan:")
 	pdf.Cell(0, 10, proof.CreatedAt.Format("2006-01-02"))
 	pdf.Ln(8)
 
 	pdf.Cell(40, 10, "Description:")
-	pdf.MultiCell(0, 10, descriptionText, "", "", false)
+	pdf.MultiCell(0, 10, proof.Description, "", "", false)
 	pdf.Ln(8)
 
-	// // Display photo URLs
-	// pdf.Cell(40, 10, "Photo KTP URL:")
-	// pdf.Cell(0, 10, proof.PhotoKTPURL)
-	// pdf.Ln(8)
-
-	// pdf.Cell(40, 10, "Photo Orang URL:")
-	// pdf.Cell(0, 10, proof.PhotoOrangURL)
-	// pdf.Ln(8)
-
-	// pdf.Cell(40, 10, "Photo Tangki URL:")
-	// pdf.Cell(0, 10, proof.PhotoTangkiURL)
-	// pdf.Ln(8)
+	// // Embed photo_ktp image from S3 URL
+	// if proof.PhotoKTPURL != "" {
+	// 	err := embedImageFromURL(pdf, proof.PhotoKTPURL, pdf.GetX(), pdf.GetY()+10, 0, 30)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	pdf.Ln(40)
+	// }
 
 	// Display transaction details
 	pdf.Cell(40, 10, "Transaction Status:")
@@ -289,13 +352,37 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 
 	// Output the PDF as bytes
 	var buf bytes.Buffer
-	err = pdf.Output(&buf)
+	err := pdf.Output(&buf)
 	if err != nil {
 		return nil, err
 	}
 
 	return buf.Bytes(), nil
 }
+
+// func embedImageFromURL(pdf *gofpdf.Fpdf, imageURL string, x, y, w, h float64) error {
+// 	// Get the image from URL
+// 	response, err := http.Get(imageURL)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer response.Body.Close()
+
+// 	// Read the image data
+// 	imageData, err := ioutil.ReadAll(response.Body)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// Embed the image into the PDF
+// 	pdf.RegisterImageOptionsReader("", gofpdf.ImageOptions{}, bytes.NewReader(imageData))
+
+// 	// Add a page and display the image
+// 	pdf.AddPage()
+// 	pdf.ImageOptions("", x, y, w, h, false, gofpdf.ImageOptions{}, 0, "")
+
+// 	return nil
+// }
 
 func GetAllProofs(c *gin.Context) {
 	var proofs []models.Proof
