@@ -9,7 +9,6 @@ import (
 )
 
 var DB *gorm.DB
-var JWTSecret string
 
 func InitDatabase(url string) *gorm.DB {
 	db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
