@@ -284,6 +284,7 @@ func GetByIdTransaction(c *gin.Context) {
 		})
 		return
 	}
+
 	c.JSON(200, gin.H{
 		"data": transaction,
 	})
@@ -405,5 +406,46 @@ func GetTodayV2Transaction(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"data": transaction,
+	})
+}
+
+func UpdateStatusTransactions(c *gin.Context) {
+	transaction := models.Transaction{}
+
+	id := c.Param("id")
+	fmt.Println(id)
+	err := config.DB.Find(&transaction, id).Error
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if transaction.ID == 0 {
+		c.JSON(404, gin.H{
+			"message": "Transaction Not Found",
+		})
+		return
+	}
+
+	status := c.Query("status")
+	if status == "" {
+		c.JSON(400, gin.H{
+			"message": "Status is required",
+		})
+		return
+	}
+
+	transaction.Status = status
+	if err := config.DB.Save(&transaction).Error; err != nil {
+		c.JSON(400, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": fmt.Sprintf("Success update status to %s transaction with id %s", status, id),
 	})
 }

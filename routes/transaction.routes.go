@@ -21,6 +21,7 @@ func TransactionRoutes(router *gin.Engine) {
 		transactionGroup.GET("/tomorrow", GetTomorrowTransactions)
 		transactionGroup.GET("/today", GetTodayTransactions)
 		transactionGroup.GET("/v2/toda", controllers.GetTodayV2Transaction)
+		transactionGroup.PATCH("/status/:id", controllers.UpdateStatusTransactions)
 	}
 }
 

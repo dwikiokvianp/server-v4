@@ -29,6 +29,7 @@ type TransactionResponse struct {
 	ID                uint64              `gorm:"primary_key:auto_increment" json:"id"`
 	TransactionDetail []TransactionDetail `json:"transaction_detail"`
 	Date              time.Time           `json:"date"`
+	User              User                `json:"User"`
 }
 
 type TransactionInput struct {
