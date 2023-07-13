@@ -7,7 +7,7 @@ import (
 )
 
 func GetAllStatus(c *gin.Context) {
-	status := models.Status{}
+	var status []models.Status
 
 	if err := config.DB.Find(&status).Error; err != nil {
 		c.AbortWithStatus(404)
