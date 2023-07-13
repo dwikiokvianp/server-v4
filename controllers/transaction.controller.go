@@ -32,17 +32,11 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	status := "pending"
-	statusQuery := c.Query("status")
-	if statusQuery != "" {
-		status = statusQuery
-	}
-
 	transaction := models.Transaction{
 		UserId:     intUserId,
 		Email:      inputTransaction.Email,
 		OfficerId:  inputTransaction.OfficerId,
-		Status:     status,
+		StatusId:   inputTransaction.StatusId,
 		Date:       inputTransaction.Date,
 		CityId:     inputTransaction.CityId,
 		ProvinceId: inputTransaction.ProvinceId,
@@ -250,9 +244,19 @@ func UpdateTransactionBatch(c *gin.Context) {
 			return
 		}
 
+		status := c.Query("status")
+
+		statusInt, err := strconv.Atoi(status)
+		if err != nil {
+			c.JSON(400, gin.H{
+				"error": "Please provide status",
+			})
+			return
+		}
+
 		transaction.VehicleId = id.VehicleId
 		transaction.DriverId = id.DriverId
-		transaction.Status = "approved"
+		transaction.StatusId = statusInt
 		if err := config.DB.Save(&transaction).Error; err != nil {
 			c.JSON(400, gin.H{
 				"error": err.Error(),
@@ -437,7 +441,23 @@ func UpdateStatusTransactions(c *gin.Context) {
 		return
 	}
 
-	transaction.Status = status
+	statusQuery := c.Query("status")
+	if statusQuery == "" {
+		c.JSON(400, gin.H{
+			"message": "Status is required",
+		})
+		return
+	}
+
+	statusInt, err := strconv.Atoi(statusQuery)
+	if err != nil {
+		c.JSON(400, gin.H{
+			"message": "Status must be integer",
+		})
+		return
+	}
+
+	transaction.StatusId = statusInt
 	if err := config.DB.Save(&transaction).Error; err != nil {
 		c.JSON(400, gin.H{
 			"error": err.Error(),

@@ -2,17 +2,17 @@ package controllers
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 	"server-v2/config"
 	"server-v2/models"
 	"strconv"
-	"time"
 	"strings"
-	"io/ioutil"
-	"errors"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -174,7 +174,7 @@ func CreateProof(c *gin.Context) {
 		return
 	}
 
-	transaction.Status = "done"
+	transaction.StatusId = 6
 
 	if err := config.DB.Save(&transaction).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -342,15 +342,15 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	pdf.Cell(0, 10, proof.CreatedAt.Format("2006-01-02"))
 	pdf.Ln(8)
 	pdf.Cell(40, 10, "Transaction Status:")
-	pdf.Cell(0, 10, transaction.Status)
+	pdf.Cell(0, 10, transaction.Status.Name)
 	pdf.Ln(8)
 
 	pageWidth, pageHeight := pdf.GetPageSize()
 
 	// Embed signature image from local file
 	if signaturePath != "" {
-		signatureWidth := 60.0 
-		signatureHeight := 30.0 
+		signatureWidth := 60.0
+		signatureHeight := 30.0
 		signatureX := (pageWidth - signatureWidth) / 2
 		signatureY := pageHeight - signatureHeight - 20
 
