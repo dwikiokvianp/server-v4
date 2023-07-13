@@ -306,21 +306,17 @@ func CreateProof(c *gin.Context) {
 }
 
 func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, company models.Company, signaturePath string) ([]byte, error) {
-	// Create a new PDF object
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetTitle("Invoice", true)
 	pdf.SetAuthor("Your Company", true)
 	pdf.AddPage()
 
-	// Set font and size for the title
 	pdf.SetFont("Arial", "B", 18)
 	pdf.Cell(0, 10, "Invoice")
 	pdf.Ln(12)
 
-	// Set font and size for the content
 	pdf.SetFont("Arial", "", 12)
 
-	// Display proof details
 	pdf.SetFont("Arial", "B", 12)
 	pdf.Cell(40, 10, "Company:")
 	pdf.SetFont("Arial", "", 12)
@@ -345,20 +341,24 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	pdf.Cell(40, 10, "Diterbitkan:")
 	pdf.Cell(0, 10, proof.CreatedAt.Format("2006-01-02"))
 	pdf.Ln(8)
-
-	// Embed signature image from local file
-	if signaturePath != "" {
-		err := embedImageFromFile(pdf, signaturePath, pdf.GetX(), pdf.GetY()+10, 0, 30)
-		if err != nil {
-			return nil, err
-		}
-		pdf.Ln(40)
-	}
-
-	// Display transaction details
 	pdf.Cell(40, 10, "Transaction Status:")
 	pdf.Cell(0, 10, transaction.Status)
 	pdf.Ln(8)
+
+	pageWidth, pageHeight := pdf.GetPageSize()
+
+	// Embed signature image from local file
+	if signaturePath != "" {
+		signatureWidth := 60.0 
+		signatureHeight := 30.0 
+		signatureX := (pageWidth - signatureWidth) / 2
+		signatureY := pageHeight - signatureHeight - 20
+
+		err := embedImageFromFile(pdf, signaturePath, signatureX, signatureY, signatureWidth, signatureHeight)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// Output the PDF as bytes
 	var buf bytes.Buffer
