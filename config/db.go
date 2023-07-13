@@ -50,6 +50,7 @@ var modelsToMigrate = []interface{}{
 	&models.WarehouseDetail{},
 	&models.User{},
 	&models.Oil{},
+	&models.Status{},
 	&models.VehicleType{},
 	&models.Vehicle{},
 	&models.Transaction{},

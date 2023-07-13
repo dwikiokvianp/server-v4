@@ -17,6 +17,18 @@ func GenerateFakeDetail() models.Detail {
 	return detail
 }
 
+func GenerateStatus(statusArr []string) {
+	for _, status := range statusArr {
+		status := models.Status{
+			Name: status,
+		}
+		err := config.DB.Create(&status).Error
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
 func GenerateRoles(roles []string) {
 	for _, role := range roles {
 		role := models.Role{
@@ -214,6 +226,20 @@ func main() {
 	fmt.Println("Migration started")
 
 	roles := []string{"ADMIN_PUSAT", "ADMIN_SALES", "OFFICER", "USER", "DRIVER"}
+
+	status := []string{
+		"WAITING APPROVAL",
+		"APPROVED",
+		"WAITING CUSTOMER TO PICK UP",
+		"PICKING UP FROM SUPPLY",
+		"ON DELIVERY TO CUSTOMER",
+		"FINISHED",
+		"POSTPONED",
+		"REJECTED",
+	}
+
+	GenerateStatus(status)
+
 	vehicleTypes := []string{"SHIP", "TRUCK"}
 	GenerateRoles(roles)
 	GenerateVehicleType(vehicleTypes)

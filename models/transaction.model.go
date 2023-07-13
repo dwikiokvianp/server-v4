@@ -18,10 +18,11 @@ type Transaction struct {
 	QrCodeUrl         string              `gorm:"not null" json:"qr_code_url"`
 	CreatedAt         int64               `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt         int64               `gorm:"autoUpdateTime" json:"updated_at"`
-	Status            string              `gorm:"not null" json:"status"`
 	Date              time.Time           `json:"date"`
 	DriverId          int                 `json:"driver_id"`
 	Driver            User                `gorm:"foreignkey:DriverId" json:"driver"`
+	StatusId          int                 `gorm:"not null" json:"status_id"`
+	Status            Status              `gorm:"foreignkey:StatusId" json:"status"`
 	TransactionDetail []TransactionDetail `json:"transaction_detail"`
 }
 
@@ -43,6 +44,7 @@ type TransactionInput struct {
 	DriverId          int                      `json:"driver_id"`
 	TransactionDetail []TransactionDetailInput `json:"transaction_detail"`
 	StorageId         int                      `json:"storage_id"`
+	StatusId          int                      `json:"status_id"`
 }
 
 type TransactionDetailInput struct {
