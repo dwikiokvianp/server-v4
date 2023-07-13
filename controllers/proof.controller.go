@@ -390,7 +390,6 @@ func embedImageFromFile(pdf *gofpdf.Fpdf, imagePath string, x, y, width, height 
 	return nil
 }
 
-
 func GetAllProofs(c *gin.Context) {
 	var proofs []models.Proof
 
