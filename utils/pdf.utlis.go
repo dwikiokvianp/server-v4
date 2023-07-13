@@ -11,19 +11,16 @@ import (
 )
 
 func UploadPdfToS3(pdf []byte, key string) (string, error) {
-	// Retrieve AWS region from environment variable
 	region := os.Getenv("AWS_REGION")
 	if region == "" {
 		return "", fmt.Errorf("AWS region not specified")
 	}
 
-	// Retrieve S3 bucket name from environment variable
 	bucket := os.Getenv("S3_BUCKET_NAME")
 	if bucket == "" {
 		return "", fmt.Errorf("S3 bucket name not specified")
 	}
 
-	// Create a new AWS session
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region),
 	})
@@ -31,10 +28,8 @@ func UploadPdfToS3(pdf []byte, key string) (string, error) {
 		return "", err
 	}
 
-	// Create an S3 client
 	svc := s3.New(sess)
 
-	// Upload the PDF to S3
 	_, err = svc.PutObject(&s3.PutObjectInput{
 		Body:   bytes.NewReader(pdf),
 		Bucket: aws.String(bucket),
@@ -47,7 +42,6 @@ func UploadPdfToS3(pdf []byte, key string) (string, error) {
 		return "", err
 	}
 
-	// Generate the URL for the uploaded PDF
 	pdfURL := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", bucket, key)
 
 	return pdfURL, nil
