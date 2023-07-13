@@ -281,7 +281,7 @@ func CreateProof(c *gin.Context) {
 	`
 
 	go func() {
-		err = utils.SendEmail(email, subject, body, invoiceURL)
+		err = utils.SendPDFEmail(email, subject, body, invoicePDF)
 		if err != nil {
 			c.JSON(500, gin.H{
 				"error": err.Error(),
