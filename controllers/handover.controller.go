@@ -52,15 +52,16 @@ func uploadsToS3(sess *session.Session, bucket string, fileHeader *multipart.Fil
 func CreateHandover(c *gin.Context) {
 	var handover models.Handover
 
-	// Bind data from JSON body
-	if err := c.ShouldBindJSON(&handover); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error binding the create handover request",
-		})
-		return
-	}
+	// Bind data from form-data
+	handover.WorkerBeforeId, _ = strconv.Atoi(c.PostForm("worker_before_id"))
+	handover.WorkerAfterId, _ = strconv.Atoi(c.PostForm("worker_after_id"))
+	handover.Condition = c.PostForm("condition")
+	handover.Status = "pending" 
 
-	// Bind image files from form-data
+	id := c.MustGet("id").(string)
+	idInt, _ := strconv.Atoi(id)
+	handover.OfficerId = idInt
+
 	fileTangki, err := c.FormFile("handover_tangki")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -104,7 +105,6 @@ func CreateHandover(c *gin.Context) {
 		return
 	}
 
-	// Upload the handover_tangki image to S3
 	handoverTangkiURL, err := uploadsToS3(sess, os.Getenv("S3_BUCKET_NAME"), fileTangki)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -114,7 +114,6 @@ func CreateHandover(c *gin.Context) {
 	}
 	handover.HandoverTangki = handoverTangkiURL
 
-	// Upload the handover_kebersihan image to S3
 	handoverKebersihanURL, err := uploadsToS3(sess, os.Getenv("S3_BUCKET_NAME"), fileKebersihan)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -124,7 +123,6 @@ func CreateHandover(c *gin.Context) {
 	}
 	handover.HandoverKebersihan = handoverKebersihanURL
 
-	// Upload the handover_level_gauge image to S3
 	handoverLevelGaugeURL, err := uploadsToS3(sess, os.Getenv("S3_BUCKET_NAME"), fileLevelGauge)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -134,7 +132,6 @@ func CreateHandover(c *gin.Context) {
 	}
 	handover.HandoverLevelGauge = handoverLevelGaugeURL
 
-	// Upload the handover_petugas image to S3
 	handoverPetugasURL, err := uploadsToS3(sess, os.Getenv("S3_BUCKET_NAME"), filePetugas)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -144,16 +141,10 @@ func CreateHandover(c *gin.Context) {
 	}
 	handover.HandoverPetugas = handoverPetugasURL
 
-	// Set other attributes
-	id := c.MustGet("id").(string)
-	idInt, _ := strconv.Atoi(id)
-	handover.OfficerId = idInt
-	handover.Status = "pending"
-
-	// Create the handover record in the database
+	// Save the handover record to the database
 	if err := config.DB.Create(&handover).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error in creating handover",
+			"error": "Failed to create handover",
 		})
 		return
 	}
