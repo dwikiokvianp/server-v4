@@ -9,9 +9,9 @@ type Proof struct {
 	PhotoKTPURL    string    `json:"photo_ktp_url"`
 	Description    string    `json:"description"`
 	InvoiceURL     string    `json:"invoice_url"`
-	// SignatureURL   string    `json:"signature_url"`
 	PhotoOrangURL  string    `json:"photo_orang_url"`
 	PhotoTangkiURL string    `json:"photo_tangki_url"`
+	// signatureFile   string    `json:"signature"`
 	CreatedAt      time.Time `json:"created_at"`
 	TransactionID  int       `json:"transaction_id"`
 	Transaction    Transaction

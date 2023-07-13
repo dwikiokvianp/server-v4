@@ -11,10 +11,8 @@ import (
 	"strconv"
 	"time"
 	"strings"
-	// "io/ioutil"
-	// "image"
-	// _ "image/jpeg"
-	// _ "image/png"
+	"io/ioutil"
+	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -132,6 +130,23 @@ func CreateProof(c *gin.Context) {
 
 	// proof.SignatureURL = signatureURL
 
+	signatureFile, err := c.FormFile("signature")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to read signature from request",
+		})
+		return
+	}
+
+	signaturePath := "/save/signature.png" // Specify the path where the signature file should be saved
+
+	if err := c.SaveUploadedFile(signatureFile, signaturePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to save signature file",
+		})
+		return
+	}
+
 	err = config.DB.Create(&proof).Error
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -203,7 +218,7 @@ func CreateProof(c *gin.Context) {
 	}
 
 	// Generate the invoice PDF with the signature
-	invoicePDF, err := GenerateInvoicePDF(*proof, transaction, company)
+	invoicePDF, err := GenerateInvoicePDF(*proof, transaction, company, signaturePath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to generate invoice PDF",
@@ -232,27 +247,27 @@ func CreateProof(c *gin.Context) {
 				background-color: #f2f2f2;
 				padding: 20px;
 			}
-
+	
 			h1 {
 				color: #333333;
 				font-size: 24px;
 				font-weight: bold;
 				margin-bottom: 20px;
 			}
-
+	
 			p {
 				color: #666666;
 				font-size: 16px;
 				line-height: 1.5;
 				margin-bottom: 10px;
 			}
-
+	
 			.qr-code {
 				display: block;
 				text-align: center;
 				margin-bottom: 20px;
 			}
-
+	
 			.qr-code img {
 				max-width: 200px;
 				height: auto;
@@ -275,7 +290,6 @@ func CreateProof(c *gin.Context) {
 		}
 	}()
 
-
 	// Save the invoice URL in the proof
 	proof.InvoiceURL = invoiceURL
 	err = config.DB.Save(&proof).Error
@@ -291,7 +305,7 @@ func CreateProof(c *gin.Context) {
 	})
 }
 
-func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, company models.Company) ([]byte, error) {
+func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, company models.Company, signaturePath string) ([]byte, error) {
 	// Create a new PDF object
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetTitle("Invoice", true)
@@ -332,18 +346,14 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	pdf.Cell(0, 10, proof.CreatedAt.Format("2006-01-02"))
 	pdf.Ln(8)
 
-	pdf.Cell(40, 10, "Description:")
-	pdf.MultiCell(0, 10, proof.Description, "", "", false)
-	pdf.Ln(8)
-
-	// // Embed photo_ktp image from S3 URL
-	// if proof.PhotoKTPURL != "" {
-	// 	err := embedImageFromURL(pdf, proof.PhotoKTPURL, pdf.GetX(), pdf.GetY()+10, 0, 30)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	pdf.Ln(40)
-	// }
+	// Embed signature image from local file
+	if signaturePath != "" {
+		err := embedImageFromFile(pdf, signaturePath, pdf.GetX(), pdf.GetY()+10, 0, 30)
+		if err != nil {
+			return nil, err
+		}
+		pdf.Ln(40)
+	}
 
 	// Display transaction details
 	pdf.Cell(40, 10, "Transaction Status:")
@@ -360,29 +370,26 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	return buf.Bytes(), nil
 }
 
-// func embedImageFromURL(pdf *gofpdf.Fpdf, imageURL string, x, y, w, h float64) error {
-// 	// Get the image from URL
-// 	response, err := http.Get(imageURL)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer response.Body.Close()
+// embedImageFromFile embeds an image from a local file in the PDF at the specified position and dimensions.
+func embedImageFromFile(pdf *gofpdf.Fpdf, imagePath string, x, y, width, height float64) error {
+	imageData, err := ioutil.ReadFile(imagePath)
+	if err != nil {
+		return err
+	}
 
-// 	// Read the image data
-// 	imageData, err := ioutil.ReadAll(response.Body)
-// 	if err != nil {
-// 		return err
-// 	}
+	// Check the image type based on the file extension
+	imageType := filepath.Ext(imagePath)[1:]
+	if imageType == "" {
+		return errors.New("unknown image type")
+	}
 
-// 	// Embed the image into the PDF
-// 	pdf.RegisterImageOptionsReader("", gofpdf.ImageOptions{}, bytes.NewReader(imageData))
+	// Embed the image in the PDF
+	pdf.RegisterImageOptionsReader(imagePath, gofpdf.ImageOptions{ImageType: imageType}, bytes.NewReader(imageData))
+	pdf.ImageOptions(imagePath, x, y, width, height, false, gofpdf.ImageOptions{}, 0, "")
 
-// 	// Add a page and display the image
-// 	pdf.AddPage()
-// 	pdf.ImageOptions("", x, y, w, h, false, gofpdf.ImageOptions{}, 0, "")
+	return nil
+}
 
-// 	return nil
-// }
 
 func GetAllProofs(c *gin.Context) {
 	var proofs []models.Proof
