@@ -23,6 +23,8 @@ func TransactionRoutes(router *gin.Engine) {
 		transactionGroup.GET("/today", GetTodayTransactions)
 		transactionGroup.GET("/v2/toda", controllers.GetTodayV2Transaction)
 		transactionGroup.PATCH("/status/:id", controllers.UpdateStatusTransactions)
+		transactionGroup.POST("/postpone/:id", controllers.PostponeTransaction)
+		transactionGroup.PATCH("/type/:id", controllers.UpdateTransactionType)
 	}
 }
 
