@@ -171,11 +171,18 @@ func GetAllTransactions(c *gin.Context) {
 		transactions []models.Transaction
 		pageSize     = 10
 		page         = 1
+		statusId     = 1
 	)
 
 	pageParam := c.Query("page")
 	if pageParam != "" {
 		page, _ = strconv.Atoi(pageParam)
+	}
+
+	statusIdParam := c.Query("status")
+	statusIdParamInt, _ := strconv.Atoi(statusIdParam)
+	if statusIdParamInt != 0 {
+		statusId = statusIdParamInt
 	}
 
 	limitParam := c.Query("limit")
@@ -194,6 +201,7 @@ func GetAllTransactions(c *gin.Context) {
 	offset := (page - 1) * pageSize
 
 	err := db.Offset(offset).Limit(pageSize).
+		Where("status_id = ?", statusId).
 		Preload("User.Company").
 		Preload("Vehicle.VehicleType").
 		Preload("Officer").
@@ -216,7 +224,6 @@ func GetAllTransactions(c *gin.Context) {
 		"total":    totalPages,
 	})
 }
-
 
 func UpdateTransactionBatch(c *gin.Context) {
 	type IdToUpdate struct {
@@ -300,11 +307,11 @@ func UpdateTransaction(c *gin.Context) {
 	transaction.TransactionDetail = []models.TransactionDetail{}
 	for _, detail := range updateRequest.TransactionDetails {
 		transactionDetail := models.TransactionDetail{
-			ID:             int64(detail.ID),
-			TransactionID:  int64(detail.TransactionID),
-			OilID:          int64(detail.OilID),
-			Quantity:       detail.Quantity,
-			StorageID:      int64(detail.StorageID),
+			ID:            int64(detail.ID),
+			TransactionID: int64(detail.TransactionID),
+			OilID:         int64(detail.OilID),
+			Quantity:      detail.Quantity,
+			StorageID:     int64(detail.StorageID),
 		}
 		transaction.TransactionDetail = append(transaction.TransactionDetail, transactionDetail)
 	}
