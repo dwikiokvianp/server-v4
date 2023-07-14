@@ -171,7 +171,7 @@ func GetAllTransactions(c *gin.Context) {
 		transactions []models.Transaction
 		pageSize     = 10
 		page         = 1
-		status       = "pending"
+		status       = 1
 	)
 
 	pageParam := c.Query("page")
@@ -186,7 +186,12 @@ func GetAllTransactions(c *gin.Context) {
 
 	statusParam := c.Query("status")
 	if statusParam != "" {
-		status = statusParam
+		statusParamInt, err := strconv.Atoi(statusParam)
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Invalid status format"})
+			return
+		}
+		status = statusParamInt
 	}
 
 	db := config.DB
@@ -198,9 +203,10 @@ func GetAllTransactions(c *gin.Context) {
 	}
 
 	offset := (page - 1) * pageSize
+	fmt.Println(status, "ini status")
 
 	err := db.Offset(offset).Limit(pageSize).
-		Where("status = ?", status).
+		Where("status_id = ?", status).
 		Joins("User.Company").
 		Joins("User").
 		Joins("Vehicle.VehicleType").
