@@ -32,11 +32,16 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
+	statusId := 1
+	if inputTransaction.StatusId != 0 {
+		statusId = inputTransaction.StatusId
+	}
+
 	transaction := models.Transaction{
 		UserId:     intUserId,
 		Email:      inputTransaction.Email,
 		OfficerId:  inputTransaction.OfficerId,
-		StatusId:   inputTransaction.StatusId,
+		StatusId:   statusId,
 		Date:       inputTransaction.Date,
 		CityId:     inputTransaction.CityId,
 		ProvinceId: inputTransaction.ProvinceId,
