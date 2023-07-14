@@ -55,6 +55,7 @@ var modelsToMigrate = []interface{}{
 	&models.Vehicle{},
 	&models.Transaction{},
 	&models.TransactionDetail{},
+	&models.PostponeHistory{},
 	&models.Officer{},
 	&models.Company{},
 	&models.HistoryOut{},

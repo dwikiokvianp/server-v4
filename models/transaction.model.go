@@ -22,7 +22,13 @@ type Transaction struct {
 	DriverId          int                 `json:"driver_id"`
 	Driver            User                `gorm:"foreignkey:DriverId" json:"driver"`
 	StatusId          int                 `gorm:"not null" json:"status_id"`
+	Type              string 			  `gorm:"not null" json:"type"`
 	TransactionDetail []TransactionDetail `json:"transaction_detail"`
+}
+
+type PostponeHistory struct {
+	TransactionID int    `gorm:"foreignKey:TransactionID" json:"transaction_id"`
+	Reason        string `json:"reason"`
 }
 
 type TransactionResponse struct {

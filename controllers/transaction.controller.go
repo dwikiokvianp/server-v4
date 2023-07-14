@@ -7,6 +7,7 @@ import (
 	"server-v2/config"
 	"server-v2/models"
 	"server-v2/utils"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -468,6 +469,68 @@ func GetTodayV2Transaction(c *gin.Context) {
 		"data": transaction,
 	})
 }
+
+func PostponeTransaction(c *gin.Context) {
+	transactionID := c.Param("id")
+
+	var postponeRequest struct {
+		Reason string `json:"reason"`
+	}
+	if err := c.ShouldBindJSON(&postponeRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var transaction models.Transaction
+	if err := config.DB.First(&transaction, transactionID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Transaksi tidak ditemukan"})
+		return
+	}
+	
+	statusID := 7 // ID untuk status "POSTPONED"
+	if err := config.DB.Model(&transaction).Update("status_id", statusID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui status transaksi"})
+		return
+	}
+	
+	postponeHistory := models.PostponeHistory{
+		TransactionID: int(transaction.ID),
+		Reason:        postponeRequest.Reason,
+	}
+	if err := config.DB.Create(&postponeHistory).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat entri PostponeHistory"})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"message": "Transaksi berhasil ditunda"})
+}
+
+func UpdateTransactionType(c *gin.Context) {
+	transactionID := c.Param("id")
+
+	var typeRequest struct {
+		Type string `json:"type"`
+	}
+	if err := c.ShouldBindJSON(&typeRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var transaction models.Transaction
+	if err := config.DB.First(&transaction, transactionID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Transaksi tidak ditemukan"})
+		return
+	}
+
+	transaction.Type = typeRequest.Type
+	if err := config.DB.Save(&transaction).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui tipe transaksi"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Tipe transaksi berhasil diperbarui"})
+}
+
 
 func UpdateStatusTransactions(c *gin.Context) {
 	transaction := models.Transaction{}
