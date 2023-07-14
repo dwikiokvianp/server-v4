@@ -36,10 +36,18 @@ func main() {
 
 	c := cron.New()
 
-	c.AddFunc("50 15 * * *", func() {
+	c.AddFunc("37 16 * * *", func() {
 		var transactions []models.Transaction
-		if err := config.DB.Where("status_id = ? AND DATE(date) = ?", 3, time.Now().Format("2006-01-02")).Find(&transactions).Error; err != nil {
+		now := time.Now().Format("2006-01-02")
+		if err := config.DB.
+			Where("status_id = ? AND DATE(date) = ?", 3, now).
+			Find(&transactions).Error; err != nil {
 			log.Println("Gagal mendapatkan transaksi yang akan ditunda:", err.Error())
+			return
+		}
+
+		if transactions == nil {
+			log.Println("Tidak ada transaksi yang akan ditunda")
 			return
 		}
 
