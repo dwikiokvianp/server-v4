@@ -338,11 +338,14 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	pdf.Cell(40, 10, transaction.Email)
 	pdf.Ln(12)
 
-	pdf.Cell(40, 10, "Diterbitkan:")
-	pdf.Cell(0, 10, proof.CreatedAt.Format("2006-01-02"))
-	pdf.Ln(8)
+	var status models.Status
+    if err := config.DB.First(&status, transaction.StatusId).Error; err != nil {
+	// Penanganan jika terjadi kesalahan
+    }
+	
+	// Menggunakan nama status pada PDF
 	pdf.Cell(40, 10, "Transaction Status:")
-	pdf.Cell(0, 10, transaction.Status.Name)
+	pdf.Cell(0, 10, status.Name)
 	pdf.Ln(8)
 
 	pageWidth, pageHeight := pdf.GetPageSize()

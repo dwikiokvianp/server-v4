@@ -26,8 +26,8 @@ type HandoverResponse struct {
 	Officer       	 UserMinimumResponse `json:"officer" gorm:"foreignKey:OfficerId"`
 	Condition     	 string              `json:"condition"`
 	Status        	 string              `json:"status"`
-	handoverTangki   string 		     `json:"handover_tangki"`
-	handoverKebersihan  string 		     `json:"handover_kebersihan"`
-	handoverLevelGauge  string           `json:"handover_level_gauge"`
-	handoverPetugas     string           `json:"handover_petugas"`
+	HandoverTangki   string 		     `json:"handover_tangki"`
+	HandoverKebersihan  string 		     `json:"handover_kebersihan"`
+	HandoverLevelGauge  string           `json:"handover_level_gauge"`
+	HandoverPetugas     string           `json:"handover_petugas"`
 }
