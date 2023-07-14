@@ -171,7 +171,6 @@ func GetAllTransactions(c *gin.Context) {
 		transactions []models.Transaction
 		pageSize     = 10
 		page         = 1
-		status       = 1
 	)
 
 	pageParam := c.Query("page")
@@ -184,16 +183,6 @@ func GetAllTransactions(c *gin.Context) {
 		pageSize, _ = strconv.Atoi(limitParam)
 	}
 
-	statusParam := c.Query("status")
-	if statusParam != "" {
-		statusParamInt, err := strconv.Atoi(statusParam)
-		if err != nil {
-			c.JSON(400, gin.H{"error": "Invalid status format"})
-			return
-		}
-		status = statusParamInt
-	}
-
 	db := config.DB
 
 	var count int64
@@ -203,16 +192,13 @@ func GetAllTransactions(c *gin.Context) {
 	}
 
 	offset := (page - 1) * pageSize
-	fmt.Println(status, "ini status")
 
 	err := db.Offset(offset).Limit(pageSize).
-		Where("status_id = ?", status).
-		Joins("User.Company").
-		Joins("User").
-		Joins("Vehicle.VehicleType").
-		Joins("Officer").
-		Joins("Province").
-		Joins("City").
+		Preload("User.Company").
+		Preload("Vehicle.VehicleType").
+		Preload("Officer").
+		Preload("Province").
+		Preload("City").
 		Preload("TransactionDetail").
 		Order("updated_at desc").
 		Find(&transactions).Error
@@ -230,6 +216,7 @@ func GetAllTransactions(c *gin.Context) {
 		"total":    totalPages,
 	})
 }
+
 
 func UpdateTransactionBatch(c *gin.Context) {
 	type IdToUpdate struct {
@@ -280,6 +267,57 @@ func UpdateTransactionBatch(c *gin.Context) {
 		"message": "success update transaction",
 	})
 
+}
+
+func UpdateTransaction(c *gin.Context) {
+	transactionID := c.Param("id")
+
+	var updateRequest models.TransactionUpdateInput
+	if err := c.ShouldBindJSON(&updateRequest); err != nil {
+		c.JSON(400, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	var transaction models.Transaction
+	if err := config.DB.Preload("TransactionDetail").First(&transaction, transactionID).Error; err != nil {
+		c.JSON(404, gin.H{
+			"error": "Transaksi tidak ditemukan",
+		})
+		return
+	}
+
+	transaction.OfficerId = updateRequest.OfficerID
+	transaction.Date = updateRequest.Date
+	transaction.ProvinceId = updateRequest.ProvinceID
+	transaction.CityId = updateRequest.CityID
+	transaction.VehicleId = updateRequest.VehicleID
+	transaction.DriverId = updateRequest.DriverID
+	transaction.StatusId = updateRequest.StatusId
+
+	// Update detail transaksi
+	transaction.TransactionDetail = []models.TransactionDetail{}
+	for _, detail := range updateRequest.TransactionDetails {
+		transactionDetail := models.TransactionDetail{
+			ID:             int64(detail.ID),
+			TransactionID:  int64(detail.TransactionID),
+			OilID:          int64(detail.OilID),
+			Quantity:       detail.Quantity,
+			StorageID:      int64(detail.StorageID),
+		}
+		transaction.TransactionDetail = append(transaction.TransactionDetail, transactionDetail)
+	}
+	if err := config.DB.Save(&transaction).Error; err != nil {
+		c.JSON(500, gin.H{
+			"error": "Gagal memperbarui transaksi",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Berhasil memperbarui transaksi",
+	})
 }
 
 func GetByIdTransaction(c *gin.Context) {

@@ -16,6 +16,7 @@ func TransactionRoutes(router *gin.Engine) {
 		transactionGroup.GET("", controllers.GetAllTransactions)
 		transactionGroup.GET("/:id", controllers.GetByIdTransaction)
 		transactionGroup.PATCH("", controllers.UpdateTransactionBatch)
+		transactionGroup.PATCH("/:id", controllers.UpdateTransaction)
 		transactionGroup.GET("/user/:id", controllers.GetTransactionByUserId)
 		transactionGroup.GET("/summary", GetTodayTransactionsHandler)
 		transactionGroup.GET("/tomorrow", GetTomorrowTransactions)
@@ -97,7 +98,7 @@ func GetTomorrowTransactions(c *gin.Context) {
 				"name":   transaction.User.Username,
 				"phone":  transaction.User.Phone,
 				"date":   transactionDate,
-				"status": transaction.Status,
+				"status": transaction.StatusId,
 			})
 		}
 	}
@@ -137,7 +138,7 @@ func GetTodayTransactions(c *gin.Context) {
 				"name":   transaction.User.Username,
 				"phone":  transaction.User.Phone,
 				"date":   transactionDate,
-				"status": transaction.Status,
+				"status": transaction.StatusId,
 			})
 		}
 	}
