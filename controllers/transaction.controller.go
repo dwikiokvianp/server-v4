@@ -529,7 +529,6 @@ func UpdateStatusTransactions(c *gin.Context) {
 	transaction := models.Transaction{}
 
 	id := c.Param("id")
-	fmt.Println(id)
 	err := config.DB.Find(&transaction, id).Error
 	if err != nil {
 		c.JSON(400, gin.H{
@@ -570,6 +569,7 @@ func UpdateStatusTransactions(c *gin.Context) {
 	}
 
 	transaction.StatusId = statusInt
+
 	if err := config.DB.Save(&transaction).Error; err != nil {
 		c.JSON(400, gin.H{
 			"error": err.Error(),
