@@ -170,15 +170,21 @@ func CreateTransactions(c *gin.Context) {
 
 func GetAllTransactions(c *gin.Context) {
 	var (
-		transactions []models.Transaction
-		pageSize     = 10
-		page         = 1
-		statusId     = 1
+		transactions    []models.Transaction
+		pageSize        = 10
+		page            = 1
+		statusId        = 1
+		transactionType = "pickup"
 	)
 
 	pageParam := c.Query("page")
 	if pageParam != "" {
 		page, _ = strconv.Atoi(pageParam)
+	}
+
+	typeTransactionQuery := c.Query("type")
+	if typeTransactionQuery != "" {
+		transactionType = typeTransactionQuery
 	}
 
 	statusIdParam := c.Query("status")
@@ -202,19 +208,39 @@ func GetAllTransactions(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
-	err := db.Offset(offset).Limit(pageSize).
-		Where("status_id = ?", statusId).
-		Preload("User.Company").
-		Preload("Vehicle.VehicleType").
-		Preload("Officer").
-		Preload("Province").
-		Preload("City").
-		Preload("TransactionDetail").
-		Order("updated_at desc").
-		Find(&transactions).Error
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
+	fmt.Println("typeTransactionQuery", typeTransactionQuery, "halo")
+
+	if typeTransactionQuery == "" {
+		err := db.Offset(offset).Limit(pageSize).
+			Where("status_id = ?", statusId).
+			Preload("User.Company").
+			Preload("Vehicle.VehicleType").
+			Preload("Officer").
+			Preload("Province").
+			Preload("City").
+			Preload("TransactionDetail").
+			Order("updated_at desc").
+			Find(&transactions).Error
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+	} else {
+		err := db.Offset(offset).Limit(pageSize).
+			Where("status_id = ?", statusId).
+			Where("type = ?", transactionType).
+			Preload("User.Company").
+			Preload("Vehicle.VehicleType").
+			Preload("Officer").
+			Preload("Province").
+			Preload("City").
+			Preload("TransactionDetail").
+			Order("updated_at desc").
+			Find(&transactions).Error
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	totalPages := (int(count) + pageSize - 1) / pageSize
@@ -489,7 +515,7 @@ func PostponeTransaction(c *gin.Context) {
 		return
 	}
 
-	statusID := 7 // ID untuk status "POSTPONED"
+	statusID := 7 // postponed status
 	transaction.StatusId = statusID
 	transaction.Date = postponeRequest.Date
 	if err := config.DB.Save(&transaction).Error; err != nil {
