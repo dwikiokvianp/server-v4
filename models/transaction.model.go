@@ -27,8 +27,10 @@ type Transaction struct {
 }
 
 type PostponeHistory struct {
-	TransactionID int    `gorm:"foreignKey:TransactionID" json:"transaction_id"`
-	Reason        string `json:"reason"`
+	Id            int       `gorm:"primaryKey;autoIncrement" json:"id"`
+	TransactionID int       `gorm:"foreignKey:TransactionID" json:"transaction_id"`
+	Reason        string    `json:"reason"`
+	Date          time.Time `json:"date"`
 }
 
 type TransactionResponse struct {

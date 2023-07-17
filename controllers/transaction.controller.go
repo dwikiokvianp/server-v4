@@ -475,7 +475,8 @@ func PostponeTransaction(c *gin.Context) {
 	transactionID := c.Param("id")
 
 	var postponeRequest struct {
-		Reason string `json:"reason"`
+		Reason string    `json:"reason"`
+		Date   time.Time `json:"date"`
 	}
 	if err := c.ShouldBindJSON(&postponeRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -489,21 +490,24 @@ func PostponeTransaction(c *gin.Context) {
 	}
 
 	statusID := 7 // ID untuk status "POSTPONED"
-	if err := config.DB.Model(&transaction).Update("status_id", statusID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui status transaksi"})
-		return
+	transaction.StatusId = statusID
+	transaction.Date = postponeRequest.Date
+	if err := config.DB.Save(&transaction).Error; err != nil {
+		c.JSON(400, gin.H{"error": "Gagal mengubah status transaksi"})
 	}
 
 	postponeHistory := models.PostponeHistory{
 		TransactionID: int(transaction.ID),
 		Reason:        postponeRequest.Reason,
+		Date:          postponeRequest.Date,
 	}
+
 	if err := config.DB.Create(&postponeHistory).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat entri PostponeHistory"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Transaksi berhasil ditunda"})
+	c.JSON(http.StatusOK, gin.H{"message": "Transaction is successfully postponed"})
 }
 
 func UpdateTransactionType(c *gin.Context) {
