@@ -36,7 +36,7 @@ func main() {
 
 	c := cron.New()
 
-	c.AddFunc("37 16 * * *", func() {
+	c.AddFunc("13 12 * * *", func() {
 		var transactions []models.Transaction
 		now := time.Now().Format("2006-01-02")
 		if err := config.DB.
@@ -71,6 +71,32 @@ func main() {
 		log.Println("Cron job selesai: Transaksi berhasil diubah")
 	})
 
+	c.AddFunc("* * * * *", func() {
+		var transactions []models.Transaction
+		now := time.Now().Format("2006-01-02")
+		if err := config.DB.
+			Where("status_id = ? AND DATE(date) = ? AND type = ?", 2, now, "pickup").
+			Find(&transactions).Error; err != nil {
+			log.Println("Gagal mendapatkan transaksi yang akan diubah statusnya:", err.Error())
+			return
+		}
+	
+		if len(transactions) == 0 {
+			log.Println("Tidak ada transaksi yang akan diubah statusnya")
+			return
+		}
+	
+		for _, transaction := range transactions {
+			transaction.StatusId = 4
+			if err := config.DB.Save(&transaction).Error; err != nil {
+				log.Println("Gagal memperbarui status transaksi:", err.Error())
+				continue
+			}
+		}
+	
+		log.Println("Cron job selesai: Transaksi berhasil diubah statusnya")
+	})
+	
 	c.Start()
 
 	err := server.Run(port)
