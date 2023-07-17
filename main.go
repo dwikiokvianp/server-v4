@@ -47,19 +47,19 @@ func main() {
 			log.Println("Gagal mendapatkan transaksi yang akan ditunda:", err.Error())
 			return
 		}
-	
+
 		if transactions == nil {
 			log.Println("Tidak ada transaksi yang akan ditunda")
 			return
 		}
-	
+
 		for _, transaction := range transactions {
 			transaction.StatusId = 7
 			if err := config.DB.Save(&transaction).Error; err != nil {
 				log.Println("Gagal memperbarui status transaksi:", err.Error())
 				continue
 			}
-	
+
 			postponeHistory := models.PostponeHistory{
 				TransactionID: int(transaction.ID),
 				Reason:        "automatic postponed",
@@ -68,14 +68,13 @@ func main() {
 				log.Println("Gagal membuat entri PostponeHistory:", err.Error())
 				continue
 			}
-	
-			// Mengirim notifikasi ke alamat email
+
 			var user models.User
 			if err := config.DB.Where("role_id = ?", 1).First(&user).Error; err != nil {
 				log.Println("Gagal mendapatkan email admin:", err.Error())
 				continue
 			}
-	
+
 			to := user.Email
 			subject := "Transaksi Ditunda"
 			body := "Transaksi dengan ID " + strconv.Itoa(int(transaction.ID)) + " telah ditunda."
@@ -83,10 +82,9 @@ func main() {
 				log.Println("Gagal mengirim notifikasi email:", err.Error())
 			}
 		}
-	
+
 		log.Println("Cron job selesai: Transaksi berhasil diubah")
 	})
-	
 
 	c.AddFunc("* * * * *", func() {
 		var transactions []models.Transaction
@@ -97,26 +95,25 @@ func main() {
 			log.Println("Gagal mendapatkan transaksi yang akan diubah statusnya:", err.Error())
 			return
 		}
-	
+
 		if len(transactions) == 0 {
 			log.Println("Tidak ada transaksi yang akan diubah statusnya")
 			return
 		}
-	
+
 		for _, transaction := range transactions {
 			transaction.StatusId = 4
 			if err := config.DB.Save(&transaction).Error; err != nil {
 				log.Println("Gagal memperbarui status transaksi:", err.Error())
 				continue
 			}
-	
-			// Mengirim notifikasi ke alamat email admin
+
 			var user models.User
 			if err := config.DB.Where("role_id = ?", 1).First(&user).Error; err != nil {
 				log.Println("Gagal mendapatkan email admin:", err.Error())
 				continue
 			}
-	
+
 			to := user.Email
 			subject := "Transaksi Diubah"
 			body := "Transaksi dengan ID " + strconv.Itoa(int(transaction.ID)) + " telah diubah statusnya menjadi 'Pickup'."
@@ -124,10 +121,10 @@ func main() {
 				log.Println("Gagal mengirim notifikasi email:", err.Error())
 			}
 		}
-	
+
 		log.Println("Cron job selesai: Transaksi berhasil diubah statusnya")
-	})	
-	
+	})
+
 	c.Start()
 
 	err := server.Run(port)
