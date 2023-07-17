@@ -10,6 +10,8 @@ import (
 	"server-v2/config"
 	"server-v2/models"
 	"server-v2/routes"
+	"server-v2/utils"
+	"strconv"
 	"time"
 )
 
@@ -45,19 +47,19 @@ func main() {
 			log.Println("Gagal mendapatkan transaksi yang akan ditunda:", err.Error())
 			return
 		}
-
+	
 		if transactions == nil {
 			log.Println("Tidak ada transaksi yang akan ditunda")
 			return
 		}
-
+	
 		for _, transaction := range transactions {
 			transaction.StatusId = 7
 			if err := config.DB.Save(&transaction).Error; err != nil {
 				log.Println("Gagal memperbarui status transaksi:", err.Error())
 				continue
 			}
-
+	
 			postponeHistory := models.PostponeHistory{
 				TransactionID: int(transaction.ID),
 				Reason:        "automatic postponed",
@@ -66,10 +68,25 @@ func main() {
 				log.Println("Gagal membuat entri PostponeHistory:", err.Error())
 				continue
 			}
+	
+			// Mengirim notifikasi ke alamat email
+			var user models.User
+			if err := config.DB.Where("role_id = ?", 1).First(&user).Error; err != nil {
+				log.Println("Gagal mendapatkan email admin:", err.Error())
+				continue
+			}
+	
+			to := user.Email
+			subject := "Transaksi Ditunda"
+			body := "Transaksi dengan ID " + strconv.Itoa(int(transaction.ID)) + " telah ditunda."
+			if err := utils.SendEmailNotification(to, subject, body); err != nil {
+				log.Println("Gagal mengirim notifikasi email:", err.Error())
+			}
 		}
-
+	
 		log.Println("Cron job selesai: Transaksi berhasil diubah")
 	})
+	
 
 	c.AddFunc("* * * * *", func() {
 		var transactions []models.Transaction
@@ -92,10 +109,24 @@ func main() {
 				log.Println("Gagal memperbarui status transaksi:", err.Error())
 				continue
 			}
+	
+			// Mengirim notifikasi ke alamat email admin
+			var user models.User
+			if err := config.DB.Where("role_id = ?", 1).First(&user).Error; err != nil {
+				log.Println("Gagal mendapatkan email admin:", err.Error())
+				continue
+			}
+	
+			to := user.Email
+			subject := "Transaksi Diubah"
+			body := "Transaksi dengan ID " + strconv.Itoa(int(transaction.ID)) + " telah diubah statusnya menjadi 'Pickup'."
+			if err := utils.SendEmailNotification(to, subject, body); err != nil {
+				log.Println("Gagal mengirim notifikasi email:", err.Error())
+			}
 		}
 	
 		log.Println("Cron job selesai: Transaksi berhasil diubah statusnya")
-	})
+	})	
 	
 	c.Start()
 
