@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/dranikpg/dto-mapper"
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"server-v2/config"
 	"server-v2/models"
 	"server-v2/utils"
-	"net/http"
 	"strconv"
 	"time"
 )
@@ -47,6 +47,7 @@ func CreateTransactions(c *gin.Context) {
 		CityId:     inputTransaction.CityId,
 		ProvinceId: inputTransaction.ProvinceId,
 		DriverId:   inputTransaction.DriverId,
+		Type:       inputTransaction.Type,
 	}
 
 	if err := config.DB.Create(&transaction).Error; err != nil {
@@ -486,13 +487,13 @@ func PostponeTransaction(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Transaksi tidak ditemukan"})
 		return
 	}
-	
+
 	statusID := 7 // ID untuk status "POSTPONED"
 	if err := config.DB.Model(&transaction).Update("status_id", statusID).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui status transaksi"})
 		return
 	}
-	
+
 	postponeHistory := models.PostponeHistory{
 		TransactionID: int(transaction.ID),
 		Reason:        postponeRequest.Reason,
@@ -501,7 +502,7 @@ func PostponeTransaction(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat entri PostponeHistory"})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"message": "Transaksi berhasil ditunda"})
 }
 
@@ -530,7 +531,6 @@ func UpdateTransactionType(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Tipe transaksi berhasil diperbarui"})
 }
-
 
 func UpdateStatusTransactions(c *gin.Context) {
 	transaction := models.Transaction{}

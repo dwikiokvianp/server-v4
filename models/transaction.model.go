@@ -22,7 +22,7 @@ type Transaction struct {
 	DriverId          int                 `json:"driver_id"`
 	Driver            User                `gorm:"foreignkey:DriverId" json:"driver"`
 	StatusId          int                 `gorm:"not null" json:"status_id"`
-	Type              string 			  `gorm:"not null" json:"type"`
+	Type              string              `gorm:"not null" json:"type"`
 	TransactionDetail []TransactionDetail `json:"transaction_detail"`
 }
 
@@ -50,6 +50,7 @@ type TransactionInput struct {
 	TransactionDetail []TransactionDetailInput `json:"transaction_detail"`
 	StorageId         int                      `json:"storage_id"`
 	StatusId          int                      `json:"status_id"`
+	Type              string                   `json:"type"`
 }
 
 type TransactionDetailInput struct {
@@ -68,18 +69,18 @@ type TransactionUpdateInput struct {
 	Quantity           int64                          `json:"quantity"`
 	OfficerID          int                            `json:"officer_id"`
 	Date               time.Time                      `json:"date"`
-	VehicleID         *int                            `gorm:"default:null" json:"vehicle_id"`
+	VehicleID          *int                           `gorm:"default:null" json:"vehicle_id"`
 	ProvinceID         int                            `json:"province_id"`
 	CityID             int                            `json:"city_id"`
 	DriverID           int                            `json:"driver_id"`
-	StatusId           int               			  `gorm:"not null" json:"status_id"`
+	StatusId           int                            `gorm:"not null" json:"status_id"`
 	TransactionDetails []TransactionDetailUpdateInput `json:"transaction_detail"`
 }
 
 type TransactionDetailUpdateInput struct {
-	ID             uint64 `json:"id"`
-	TransactionID  uint64 `json:"transaction_id"`
-	OilID          uint64 `json:"oil_id"`
-	Quantity       int64  `json:"quantity"`
-	StorageID      uint64 `json:"storage_id"`
+	ID            uint64 `json:"id"`
+	TransactionID uint64 `json:"transaction_id"`
+	OilID         uint64 `json:"oil_id"`
+	Quantity      int64  `json:"quantity"`
+	StorageID     uint64 `json:"storage_id"`
 }
