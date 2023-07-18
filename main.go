@@ -86,7 +86,7 @@ func main() {
 		log.Println("Cron job selesai: Transaksi berhasil diubah")
 	})
 
-	c.AddFunc("* * * * *", func() {
+	c.AddFunc("1 1 * * *", func() {
 		var transactions []models.Transaction
 		now := time.Now().Format("2006-01-02")
 		if err := config.DB.

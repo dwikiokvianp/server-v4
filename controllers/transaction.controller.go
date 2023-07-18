@@ -605,7 +605,18 @@ func UpdateStatusTransactions(c *gin.Context) {
 		return
 	}
 
-	transaction.StatusId = statusInt
+	dbDate := transaction.Date.Format("2006-01-02")
+	timeNow := time.Now().Format("2006-01-02")
+
+	if dbDate == timeNow {
+		if transaction.Type == "pickup" {
+			transaction.StatusId = 3
+		} else {
+			transaction.StatusId = statusInt
+		}
+	} else {
+		transaction.StatusId = statusInt
+	}
 
 	if err := config.DB.Save(&transaction).Error; err != nil {
 		c.JSON(400, gin.H{
