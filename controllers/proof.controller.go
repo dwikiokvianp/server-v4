@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -176,6 +177,14 @@ func CreateProof(c *gin.Context) {
 
 	transaction.StatusId = 6
 
+	var oils []models.Oil
+	if err := config.DB.Find(&oils).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve oils from the database",
+		})
+		return
+	}
+
 	if err := config.DB.Save(&transaction).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to update transaction status",
@@ -218,7 +227,7 @@ func CreateProof(c *gin.Context) {
 	}
 
 	// Generate the invoice PDF with the signature
-	invoicePDF, err := GenerateInvoicePDF(*proof, transaction, company, signaturePath)
+	invoicePDF, err := GenerateInvoicePDF(*proof, transaction, company, signaturePath, oils)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to generate invoice PDF",
@@ -305,7 +314,7 @@ func CreateProof(c *gin.Context) {
 	})
 }
 
-func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, company models.Company, signaturePath string) ([]byte, error) {
+func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, company models.Company, signaturePath string, oils []models.Oil) ([]byte, error) {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetTitle("Invoice", true)
 	pdf.SetAuthor("Your Company", true)
@@ -339,10 +348,11 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	pdf.Ln(12)
 
 	var status models.Status
-    if err := config.DB.First(&status, transaction.StatusId).Error; err != nil {
-	// Penanganan jika terjadi kesalahan
-    }
-	
+	if err := config.DB.First(&status, transaction.StatusId).Error; err != nil {
+		log.Println("Gagal mendapatkan status transaksi:", err.Error())
+		return nil, err
+	}
+
 	// Menggunakan nama status pada PDF
 	pdf.Cell(40, 10, "Transaction Status:")
 	pdf.Cell(0, 10, status.Name)
@@ -361,6 +371,42 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// Header tabel
+	pdf.Rect(10, 100, 190, 10, "F")
+
+	cellWidth := 47.5
+	cellHeight := 10.0
+
+	pdf.SetFont("Arial", "B", 12)
+	pdf.SetFillColor(220, 220, 220)
+	pdf.SetTextColor(0, 0, 0)
+
+	pdf.CellFormat(cellWidth, cellHeight, "ID", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(cellWidth, cellHeight, "Name", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(cellWidth, cellHeight, "Storage ID", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(cellWidth, cellHeight, "Quantity", "1", 0, "C", true, 0, "")
+
+	// Data minyak
+	pdf.SetFont("Arial", "", 12)
+	for i, oil := range oils {
+		rowIndex := 110 + float64(i)*10
+		pdf.Rect(10, rowIndex, 190, 10, "F")
+
+		x := 10.0
+		y := rowIndex + 0.5*(10.0-cellHeight)
+
+		pdf.SetXY(x, y)
+		pdf.CellFormat(cellWidth, cellHeight, strconv.Itoa(oil.Id), "1", 0, "C", false, 0, "")
+
+		x += cellWidth
+		pdf.SetXY(x, y)
+		pdf.CellFormat(cellWidth, cellHeight, oil.Name, "1", 0, "C", false, 0, "")
+
+		x += cellWidth
+		pdf.SetXY(x, y)
+		pdf.CellFormat(cellWidth, cellHeight, strconv.Itoa(oil.StorageId), "1", 0, "C", false, 0, "")
 	}
 
 	// Output the PDF as bytes
