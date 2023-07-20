@@ -11,6 +11,9 @@ func TravelDeliveryRoutes(c *gin.Engine) {
 		travelDeliveryGroup.POST("", controllers.CreateTravelOrder)
 		travelDeliveryGroup.GET("", controllers.GetTravelOrder)
 		travelDeliveryGroup.GET("/:id", controllers.GetTravelOrderById)
+		travelDeliveryGroup.GET("/user", controllers.GetTravelOrderByUser)
+		travelDeliveryGroup.PATCH("/status/batch/:id", controllers.UpdateBatchStatus)
 		travelDeliveryGroup.PATCH("/:id", controllers.UpdateStatusTravel)
+
 	}
 }

@@ -25,6 +25,8 @@ func TransactionRoutes(router *gin.Engine) {
 		transactionGroup.PATCH("/status/:id", controllers.UpdateStatusTransactions)
 		transactionGroup.POST("/postpone/:id", controllers.PostponeTransaction)
 		transactionGroup.PATCH("/type/:id", controllers.UpdateTransactionType)
+		transactionGroup.GET("/mantap/halo/jiwa", controllers.TestEndpoint)
+		transactionGroup.GET("/user/transaction", controllers.GetUserTransaction)
 	}
 }
 

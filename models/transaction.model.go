@@ -21,9 +21,9 @@ type Transaction struct {
 	Date              time.Time           `json:"date"`
 	DriverId          int                 `json:"driver_id"`
 	Driver            User                `gorm:"foreignkey:DriverId" json:"driver"`
-	StatusId          int                 `gorm:"not null" json:"status_id"`
-	Type              string              `gorm:"not null" json:"type"`
 	TransactionDetail []TransactionDetail `json:"transaction_detail"`
+	StatusId          int                 `json:"status_id"`
+	Status            StatusTypeMapping   `gorm:"foreignkey:StatusId" json:"status"`
 }
 
 type PostponeHistory struct {
@@ -52,7 +52,6 @@ type TransactionInput struct {
 	TransactionDetail []TransactionDetailInput `json:"transaction_detail"`
 	StorageId         int                      `json:"storage_id"`
 	StatusId          int                      `json:"status_id"`
-	Type              string                   `json:"type"`
 }
 
 type TransactionDetailInput struct {

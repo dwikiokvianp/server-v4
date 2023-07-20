@@ -9,5 +9,6 @@ func StatusRoutes(c *gin.Engine) {
 	statusGroup := c.Group("/status")
 	{
 		statusGroup.GET("", controllers.GetAllStatus)
+		statusGroup.GET("/types", controllers.GetAllTypes)
 	}
 }

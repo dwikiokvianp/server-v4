@@ -51,6 +51,8 @@ var modelsToMigrate = []interface{}{
 	&models.User{},
 	&models.Oil{},
 	&models.Status{},
+	&models.StatusType{},
+	&models.StatusTypeMapping{},
 	&models.VehicleType{},
 	&models.Vehicle{},
 	&models.Transaction{},

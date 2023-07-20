@@ -162,11 +162,14 @@ func CreateTravelOrder(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Success create travel order",
 	})
+
 }
 
 func GetTravelOrder(c *gin.Context) {
 	var travelOrder []models.TravelOrder
 	if err := config.DB.
+		Preload("DeliveryOrderRecipientDetail.Transaction.User.Company").
+		Preload("Driver").
 		Find(&travelOrder).Error; err != nil {
 		c.JSON(400, gin.H{
 			"message": "Failed to get travel order",
@@ -179,10 +182,42 @@ func GetTravelOrder(c *gin.Context) {
 	})
 }
 
+func GetTravelOrderByUser(c *gin.Context) {
+	var travelOrder []models.TravelOrder
+
+	userId := c.MustGet("id")
+	fmt.Println("driver_id", userId)
+
+	if err := config.DB.Where("driver_id = ?", userId).
+		Find(&travelOrder).Error; err != nil {
+		c.JSON(400, gin.H{
+			"message": "Failed to get travel order",
+		})
+	}
+
+	if travelOrder == nil {
+		c.JSON(400, gin.H{
+			"message": "Travel order not found",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": travelOrder,
+	})
+
+}
+
 func GetTravelOrderById(c *gin.Context) {
 	id := c.Param("id")
 	var travelOrder models.TravelOrder
-	if err := config.DB.Where("id = ?", id).First(&travelOrder).Error; err != nil {
+	if err := config.DB.Where("id = ?", id).
+		Preload("DeliveryOrderRecipientDetail.Transaction.User.Company").
+		Preload("DeliveryOrderRecipientDetail.Transaction.TransactionDetail").
+		Preload("DeliveryOrderRecipientDetail.Transaction.Status.Status").
+		//Preload("DeliveryOrderRecipientDetail.Transaction.Warehouse").
+		Preload("Driver").
+		First(&travelOrder).Error; err != nil {
 		c.JSON(400, gin.H{
 			"message": "Travel order not found",
 		})
@@ -194,6 +229,48 @@ func GetTravelOrderById(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"data": travelOrder,
+	})
+}
+func UpdateBatchStatus(c *gin.Context) {
+	id := c.Param("id")
+	var travelOrder []models.TravelOrder
+	if err := config.DB.Where("id = ?", id).
+		Preload("DeliveryOrderRecipientDetail.Transaction.User.Company").
+		Preload("DeliveryOrderRecipientDetail.Transaction.TransactionDetail").
+		Preload("DeliveryOrderRecipientDetail.Transaction.Status.Status").
+		Preload("Driver").
+		Find(&travelOrder).Error; err != nil {
+		c.JSON(400, gin.H{
+			"message": "Travel order not found",
+		})
+		return
+	}
+
+	for _, travel := range travelOrder {
+		for _, deliveryOrder := range travel.DeliveryOrderRecipientDetail {
+			transactionId := deliveryOrder.TransactionID
+			var internalTransaction models.Transaction
+			if err := config.DB.Where("id = ?", transactionId).First(&internalTransaction).Error; err != nil {
+				c.JSON(400, gin.H{
+					"message": "Transaction not found",
+				})
+				return
+			}
+
+			internalTransaction.StatusId = 8
+
+			if err := config.DB.Save(&internalTransaction).Error; err != nil {
+				c.JSON(400, gin.H{
+					"message": "Failed to update transaction",
+				})
+				return
+			}
+
+		}
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Success update status",
 	})
 }
 

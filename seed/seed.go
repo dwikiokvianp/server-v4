@@ -9,6 +9,17 @@ import (
 	"server-v2/models"
 )
 
+func GenerateStatusType() {
+	for _, statusType := range []string{"Delivery", "Pickup"} {
+		statusType := models.StatusType{
+			Name: statusType,
+		}
+		err := config.DB.Create(&statusType).Error
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
 func GenerateFakeDetail() models.Detail {
 	detail := models.Detail{
 		Balance: 0,
@@ -27,6 +38,71 @@ func GenerateStatus(statusArr []string) {
 			fmt.Println(err)
 		}
 	}
+
+	GenerateStatusType()
+
+	statusTypeMappingData := []models.StatusTypeMapping{
+		{
+			StatusID:     1,
+			StatusTypeID: 1,
+		},
+		{
+			StatusID:     1,
+			StatusTypeID: 2,
+		},
+		{
+			StatusID:     2,
+			StatusTypeID: 1,
+		},
+		{
+			StatusID:     3,
+			StatusTypeID: 1,
+		},
+		{
+			StatusID:     3,
+			StatusTypeID: 2,
+		},
+		{
+			StatusID:     4,
+			StatusTypeID: 2,
+		},
+		{
+			StatusID:     5,
+			StatusTypeID: 1,
+		},
+		{
+			StatusID:     6,
+			StatusTypeID: 1,
+		},
+		{
+			StatusID:     7,
+			StatusTypeID: 1,
+		},
+		{
+			StatusID:     7,
+			StatusTypeID: 2,
+		},
+		{
+			StatusID:     8,
+			StatusTypeID: 1,
+		},
+		{
+			StatusID:     8,
+			StatusTypeID: 2,
+		},
+	}
+
+	for _, statusTypeMapping := range statusTypeMappingData {
+		dataMapping := models.StatusTypeMapping{
+			StatusID:     statusTypeMapping.StatusID,
+			StatusTypeID: statusTypeMapping.StatusTypeID,
+		}
+		err := config.DB.Create(&dataMapping).Error
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
 }
 
 func GenerateRoles(roles []string) {

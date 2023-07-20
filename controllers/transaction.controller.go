@@ -25,6 +25,14 @@ func CreateTransactions(c *gin.Context) {
 
 	userId := c.Param("id")
 
+	user := models.User{}
+	if err := config.DB.Where("id = ?", userId).First(&user).Error; err != nil {
+		c.JSON(400, gin.H{
+			"error": "User not found",
+		})
+		return
+	}
+
 	intUserId, err := strconv.Atoi(userId)
 	if err != nil {
 		c.JSON(400, gin.H{
@@ -33,22 +41,18 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	statusId := 1
-	if inputTransaction.StatusId != 0 {
-		statusId = inputTransaction.StatusId
-	}
-
 	transaction := models.Transaction{
 		UserId:     intUserId,
-		Email:      inputTransaction.Email,
+		Email:      user.Email,
 		OfficerId:  inputTransaction.OfficerId,
-		StatusId:   statusId,
 		Date:       inputTransaction.Date,
 		CityId:     inputTransaction.CityId,
 		ProvinceId: inputTransaction.ProvinceId,
 		DriverId:   inputTransaction.DriverId,
-		Type:       inputTransaction.Type,
+		StatusId:   inputTransaction.StatusId,
 	}
+
+	fmt.Println("status", inputTransaction.StatusId)
 
 	if err := config.DB.Create(&transaction).Error; err != nil {
 		c.JSON(500, gin.H{
@@ -170,11 +174,10 @@ func CreateTransactions(c *gin.Context) {
 
 func GetAllTransactions(c *gin.Context) {
 	var (
-		transactions    []models.Transaction
-		pageSize        = 10
-		page            = 1
-		statusId        = 1
-		transactionType = "pickup"
+		transactions []models.Transaction
+		pageSize     = 10
+		page         = 1
+		statusId     = 1
 	)
 
 	pageParam := c.Query("page")
@@ -183,9 +186,6 @@ func GetAllTransactions(c *gin.Context) {
 	}
 
 	typeTransactionQuery := c.Query("type")
-	if typeTransactionQuery != "" {
-		transactionType = typeTransactionQuery
-	}
 
 	statusIdParam := c.Query("status")
 	statusIdParamInt, _ := strconv.Atoi(statusIdParam)
@@ -207,40 +207,23 @@ func GetAllTransactions(c *gin.Context) {
 	}
 
 	offset := (page - 1) * pageSize
+	fmt.Println(statusId)
 
 	fmt.Println("typeTransactionQuery", typeTransactionQuery, "halo")
 
-	if typeTransactionQuery == "" {
-		err := db.Offset(offset).Limit(pageSize).
-			Where("status_id = ?", statusId).
-			Preload("User.Company").
-			Preload("Vehicle.VehicleType").
-			Preload("Officer").
-			Preload("Province").
-			Preload("City").
-			Preload("TransactionDetail").
-			Order("updated_at desc").
-			Find(&transactions).Error
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-	} else {
-		err := db.Offset(offset).Limit(pageSize).
-			Where("status_id = ?", statusId).
-			Where("type = ?", transactionType).
-			Preload("User.Company").
-			Preload("Vehicle.VehicleType").
-			Preload("Officer").
-			Preload("Province").
-			Preload("City").
-			Preload("TransactionDetail").
-			Order("updated_at desc").
-			Find(&transactions).Error
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
+	err := db.Offset(offset).Limit(pageSize).
+		Where("status_id = ?", statusId).
+		Preload("User.Company").
+		Preload("Vehicle.VehicleType").
+		Preload("Officer").
+		Preload("Province").
+		Preload("City").
+		Preload("TransactionDetail.Oil").
+		Order("updated_at desc").
+		Find(&transactions).Error
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
 	}
 
 	totalPages := (int(count) + pageSize - 1) / pageSize
@@ -250,6 +233,38 @@ func GetAllTransactions(c *gin.Context) {
 		"page":     page,
 		"pageSize": pageSize,
 		"total":    totalPages,
+	})
+}
+
+func GetUserTransaction(c *gin.Context) {
+
+	var userTransaction []models.Transaction
+
+	userId := c.Query("user_id")
+
+	if userId == "" {
+		if err := config.DB.
+			Preload("User.Company").
+			Preload("TransactionDetail").
+			Preload("Status.StatusType").
+			Find(&userTransaction).Error; err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+	} else {
+		if err := config.DB.
+			Where("user_id = ?", userId).
+			Preload("User.Company").
+			Preload("TransactionDetail").
+			Preload("Status.StatusType").
+			Find(&userTransaction).Error; err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.JSON(200, gin.H{
+		"data": userTransaction,
 	})
 }
 
@@ -289,7 +304,18 @@ func UpdateTransactionBatch(c *gin.Context) {
 
 		transaction.VehicleId = id.VehicleId
 		transaction.DriverId = id.DriverId
+
 		transaction.StatusId = statusInt
+
+		transactionDate := transaction.Date.Format("2006-01-02")
+		now := time.Now().Format("2006-01-02")
+
+		if transactionDate == now {
+			if statusInt == 4 {
+				transaction.StatusId = 7
+			}
+		}
+
 		if err := config.DB.Save(&transaction).Error; err != nil {
 			c.JSON(400, gin.H{
 				"error": err.Error(),
@@ -365,6 +391,8 @@ func GetByIdTransaction(c *gin.Context) {
 		Joins("Officer").
 		Joins("User.Detail").
 		Joins("User.Company").
+		Joins("Status.StatusType").
+		Joins("Status.Status").
 		Find(&transaction, id).Error
 	if err != nil {
 		c.JSON(400, gin.H{
@@ -540,7 +568,7 @@ func UpdateTransactionType(c *gin.Context) {
 	transactionID := c.Param("id")
 
 	var typeRequest struct {
-		Type string `json:"type"`
+		StatusId int `json:"status_id"`
 	}
 	if err := c.ShouldBindJSON(&typeRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -553,7 +581,7 @@ func UpdateTransactionType(c *gin.Context) {
 		return
 	}
 
-	transaction.Type = typeRequest.Type
+	transaction.StatusId = typeRequest.StatusId
 	if err := config.DB.Save(&transaction).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui tipe transaksi"})
 		return
@@ -605,12 +633,12 @@ func UpdateStatusTransactions(c *gin.Context) {
 		return
 	}
 
-	dbDate := transaction.Date.Format("2006-01-02")
-	timeNow := time.Now().Format("2006-01-02")
+	now := time.Now().Format("2006-01-02")
+	transactionDate := transaction.Date.Format("2006-01-02")
 
-	if dbDate == timeNow {
-		if transaction.Type == "pickup" {
-			transaction.StatusId = 3
+	if transactionDate == now {
+		if statusInt == 5 {
+			transaction.StatusId = 6
 		} else {
 			transaction.StatusId = statusInt
 		}
@@ -628,4 +656,23 @@ func UpdateStatusTransactions(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": fmt.Sprintf("Success update status to %s transaction with id %s", status, id),
 	})
+}
+
+func TestEndpoint(c *gin.Context) {
+	transaction := models.Transaction{}
+	err := config.DB.Find(&transaction, 2).Error
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	now := time.Now().Format("2006-01-02")
+	transactionDate := transaction.Date.Format("2006-01-02")
+
+	c.JSON(200, gin.H{
+		"message": "success",
+		"now":     now,
+		"date":    transactionDate,
+	})
+
 }
