@@ -274,6 +274,11 @@ func GetUserTransaction(c *gin.Context) {
 		return
 	}
 
+	var totalPage int64
+	if totalRecords > 0 {
+		totalPage = (totalRecords + int64(pageSize) - 1) / int64(pageSize)
+	}
+
 	offset := (page - 1) * pageSize
 	dbQuery = dbQuery.Limit(pageSize).Offset(offset)
 
@@ -288,6 +293,7 @@ func GetUserTransaction(c *gin.Context) {
 		"totalCount":  totalRecords,
 		"currentPage": page,
 		"pageSize":    pageSize,
+		"totalPage":   totalPage,
 	})
 }
 
