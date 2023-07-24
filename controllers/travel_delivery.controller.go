@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"math"
 	"server-v2/config"
 	"server-v2/models"
 	"server-v2/utils"
@@ -167,9 +168,42 @@ func CreateTravelOrder(c *gin.Context) {
 
 func GetTravelOrder(c *gin.Context) {
 	var travelOrder []models.TravelOrder
+	page := c.DefaultQuery("page", "1")
+	limit := c.DefaultQuery("limit", "10")
+
+	pageInt, err := strconv.Atoi(page)
+	if err != nil || pageInt < 1 {
+		c.JSON(400, gin.H{
+			"message": "Invalid page parameter",
+		})
+		return
+	}
+
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil || limitInt < 1 {
+		c.JSON(400, gin.H{
+			"message": "Invalid limit parameter",
+		})
+		return
+	}
+
+	offset := (pageInt - 1) * limitInt
+
+	var totalRecords int64
+	if err := config.DB.Model(&models.TravelOrder{}).Count(&totalRecords).Error; err != nil {
+		c.JSON(400, gin.H{
+			"message": "Failed to get total record count",
+		})
+		return
+	}
+
+	totalPage := int(math.Ceil(float64(totalRecords) / float64(limitInt)))
+
 	if err := config.DB.
 		Preload("DeliveryOrderRecipientDetail.Transaction.User.Company").
 		Preload("Driver").
+		Offset(offset).
+		Limit(limitInt).
 		Find(&travelOrder).Error; err != nil {
 		c.JSON(400, gin.H{
 			"message": "Failed to get travel order",
@@ -178,7 +212,11 @@ func GetTravelOrder(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"data": travelOrder,
+		"data":        travelOrder,
+		"totalCount":  totalRecords,
+		"currentPage": pageInt,
+		"pageSize":    limitInt,
+		"totalPage":   totalPage,
 	})
 }
 
