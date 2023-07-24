@@ -175,7 +175,7 @@ func CreateTransactions(c *gin.Context) {
 func GetAllTransactions(c *gin.Context) {
 	var (
 		transactions []models.Transaction
-		pageSize     = 10
+		pageSize     = 5
 		page         = 1
 		statusId     = 1
 	)
@@ -238,33 +238,56 @@ func GetAllTransactions(c *gin.Context) {
 
 func GetUserTransaction(c *gin.Context) {
 
-	var userTransaction []models.Transaction
-
 	userId := c.Query("user_id")
+	dateQuery := c.Query("date")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 
-	if userId == "" {
-		if err := config.DB.
-			Preload("User.Company").
-			Preload("TransactionDetail").
-			Preload("Status.StatusType").
-			Find(&userTransaction).Error; err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-	} else {
-		if err := config.DB.
-			Where("user_id = ?", userId).
-			Preload("User.Company").
-			Preload("TransactionDetail").
-			Preload("Status.StatusType").
-			Find(&userTransaction).Error; err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
+	dateNow := time.Now()
+	var fromDate time.Time
+
+	switch dateQuery {
+	case "month":
+		fromDate = dateNow.AddDate(0, -1, 0)
+	case "week":
+		fromDate = dateNow.AddDate(0, 0, -7)
+	case "today":
+		fromDate = dateNow
+	case "all":
+	default:
+	}
+
+	dbQuery := config.DB.
+		Where("date >= ?", fromDate.Format("2006-01-02")).
+		Preload("User.Company").
+		Preload("TransactionDetail").
+		Preload("Status.StatusType").
+		Order("date desc")
+
+	if userId != "" {
+		dbQuery = dbQuery.Where("user_id = ?", userId)
+	}
+
+	var totalRecords int64
+	if err := dbQuery.Model(&models.Transaction{}).Count(&totalRecords).Error; err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	offset := (page - 1) * pageSize
+	dbQuery = dbQuery.Limit(pageSize).Offset(offset)
+
+	var userTransactions []models.Transaction
+	if err := dbQuery.Find(&userTransactions).Error; err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(200, gin.H{
-		"data": userTransaction,
+		"data":        userTransactions,
+		"totalCount":  totalRecords,
+		"currentPage": page,
+		"pageSize":    pageSize,
 	})
 }
 

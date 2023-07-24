@@ -31,7 +31,7 @@ func main() {
 	server.Use(cors.New(myCorsConfig))
 	server.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "Check github action",
+			"message": "Check github action halo",
 		})
 	})
 	routes.Routes(server)

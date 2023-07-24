@@ -175,7 +175,7 @@ func CreateProof(c *gin.Context) {
 		return
 	}
 
-	transaction.StatusId = 6
+	transaction.StatusId = 8
 
 	var oils []models.Oil
 	if err := config.DB.Find(&oils).Error; err != nil {
