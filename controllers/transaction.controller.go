@@ -201,7 +201,10 @@ func GetAllTransactions(c *gin.Context) {
 	db := config.DB
 
 	var count int64
-	if err := db.Model(&models.Transaction{}).Count(&count).Error; err != nil {
+	if err := db.Model(&models.Transaction{}).
+		Where("status_id = ?", statusId).
+		Count(&count).
+		Error; err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
