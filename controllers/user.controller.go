@@ -81,7 +81,7 @@ func UpdateBalanceAndCredit(c *gin.Context) {
 func GetAllUser(c *gin.Context) {
 	var (
 		userList []models.User
-		pageSize = 10
+		pageSize = 12
 		page     = 1
 	)
 
