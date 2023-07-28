@@ -15,7 +15,7 @@ jobs:
 
       - name: Build and package
         run: |
-#          go build -o binary
+          go build -o binary
 
       - name: Execute remote SSH commands
         uses: appleboy/ssh-action@v0.1.10
@@ -28,7 +28,6 @@ jobs:
             echo "Deploying to ${{ secrets.HOST }}"
             cd baru/server-v4
             git pull origin
-#            go run seed/seed.go && go run seed/seed_regions.go
             sudo docker compose up --build -d
       - name: Send mail
         uses: dawidd6/action-send-mail@v3
