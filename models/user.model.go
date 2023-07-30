@@ -58,8 +58,3 @@ type Employee struct {
 	Id     int `json:"id"`
 	UserId int `json:"user_id"`
 }
-
-type Customer struct {
-	Id     int `json:"id"`
-	UserId int `json:"user_id"`
-}
