@@ -13,6 +13,16 @@ type Customer struct {
 	Phone          string  `json:"phone"`
 }
 
+type CustomerInput struct {
+	Id             int    `json:"id" gorm:"primary_key"`
+	UserId         int    `json:"user_id"`
+	CustomerTypeId int    `json:"customer_type_id"`
+	DetailId       int    `json:"detail_id"`
+	CompanyID      int    `json:"company_id"`
+	CreatedAt      int64  `gorm:"autoCreateTime" json:"created_at"`
+	Phone          string `json:"phone"`
+}
+
 type CustomerType struct {
 	Id   int    `json:"id" gorm:"primary_key"`
 	Name string `json:"name"`

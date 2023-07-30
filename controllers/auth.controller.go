@@ -75,13 +75,13 @@ func LoginUser(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := config.DB.Where("Email = ?", inputAuth.Email).Preload("Role").Find(&user).Error; err != nil {
+	if err := config.DB.Where("email = ?", inputAuth.Email).Find(&user).Error; err != nil {
 		c.JSON(500, gin.H{"message": "username or password is incorrect"})
 		return
 	}
 
 	if inputAuth.Password != user.Password {
-		c.JSON(401, gin.H{"message": "username or password is incorrect"})
+		c.JSON(401, gin.H{"message": "Incorrect password"})
 		return
 	}
 
@@ -105,5 +105,9 @@ func LoginUser(c *gin.Context) {
 
 		c.JSON(200, gin.H{"message": "Login success", "token": response})
 		return
+	} else {
+		c.JSON(200, gin.H{
+			"message": "Login success",
+		})
 	}
 }

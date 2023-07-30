@@ -141,7 +141,7 @@ func GenerateCustomerType() {
 	}
 }
 
-func GenerateFakeUsers(count, role int) {
+func GenerateFakeUsers(count int) {
 	fake := faker.New()
 	for i := 0; i < count; i++ {
 		detail := GenerateFakeDetail()
@@ -253,28 +253,27 @@ func generateFakeCompany(num int) {
 	}
 }
 
-func generateFakeEmployee(num int) {
-	fake := faker.New()
-	var warehouse models.Warehouse
-	warehouse = models.Warehouse{
-		Name:       fake.Car().Model(),
-		ProvinceId: 2,
-		CityId:     2,
-		Location:   fake.Address().City(),
-	}
-	config.DB.Create(&warehouse)
-
+func generateFakeEmployee(num, roleInput int) {
 	for i := 0; i < num; i++ {
-		employee := models.Officer{
-			Username:    fake.Person().LastName(),
-			Password:    fake.Company().Suffix(),
-			Email:       fake.Internet().Email(),
-			PhoneNumber: fake.Phone().Number(),
-			WarehouseId: warehouse.Id,
+		fake := faker.New()
+
+		user := models.User{
+			Username: fake.Person().Name(),
+			Password: fake.Internet().Password(),
+			Email:    fake.Internet().Email(),
 		}
-		err := config.DB.Create(&employee).Error
+
+		err := config.DB.Create(&user).Error
 		if err != nil {
 			fmt.Println(err)
+		}
+		employee := models.Employee{
+			UserId: user.Id,
+			RoleId: roleInput,
+		}
+		errCreateEmployee := config.DB.Create(&employee).Error
+		if err != nil {
+			fmt.Println(errCreateEmployee)
 		}
 	}
 }
@@ -350,18 +349,18 @@ func main() {
 
 	generateFakeCompany(10)
 
-	generateFakeEmployee(10)
+	generateFakeEmployee(10, 1)
+	generateFakeEmployee(10, 2)
+	generateFakeEmployee(10, 3)
+	generateFakeEmployee(10, 4)
+	generateFakeEmployee(10, 5)
 	oils := []string{"HSD", "MFO"}
 	GenerateOil(oils, 1)
 
 	generateVehicle(2, 1)
 	generateVehicle(2, 2)
 
-	GenerateFakeUsers(5, 1)
-	GenerateFakeUsers(5, 2)
-	GenerateFakeUsers(5, 3)
-	GenerateFakeUsers(5, 4)
-	GenerateFakeUsers(5, 5)
+	GenerateFakeUsers(5)
 	generateSomeUser(User{
 		Username:  "admin",
 		Password:  "admin",

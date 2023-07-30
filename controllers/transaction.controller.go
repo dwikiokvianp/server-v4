@@ -41,8 +41,10 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("user id", intUserId)
+
 	transaction := models.Transaction{
-		UserId:     intUserId,
+		CustomerId: intUserId,
 		Email:      user.Email,
 		OfficerId:  inputTransaction.OfficerId,
 		Date:       inputTransaction.Date,
@@ -55,7 +57,7 @@ func CreateTransactions(c *gin.Context) {
 
 	if err := config.DB.Create(&transaction).Error; err != nil {
 		c.JSON(500, gin.H{
-			"error": "Error here in the create transaction",
+			"error": err.Error(),
 		})
 		return
 	}

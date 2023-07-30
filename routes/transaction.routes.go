@@ -3,7 +3,6 @@ package routes
 import (
 	"net/http"
 	"server-v2/controllers"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -69,79 +68,44 @@ func GetTodayTransactionsHandler(c *gin.Context) {
 const defaultLimit = 10
 
 func GetTomorrowTransactions(c *gin.Context) {
-	offsetStr := c.Query("offset")
-	limitStr := c.Query("limit")
 
-	offset, err := strconv.Atoi(offsetStr)
-	if err != nil || offset < 0 {
-		offset = 0
-	}
-
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil || limit < 1 {
-		limit = defaultLimit
-	}
-
-	transactions, err := controllers.GetTomorrowTransactions()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	username := c.Query("username")
-
-	response := make([]gin.H, 0)
-	tomorrow := time.Now().Add(24 * time.Hour).Format("02-01-2006")
-	for _, transaction := range transactions[offset : offset+limit] {
-		transactionDate := transaction.Date.Format("02-01-2006")
-		if transactionDate == tomorrow && (username == "" || transaction.User.Username == username) {
-			response = append(response, gin.H{
-				"id":     transaction.ID,
-				"name":   transaction.User.Username,
-				"date":   transactionDate,
-				"status": transaction.StatusId,
-			})
-		}
-	}
-
-	c.JSON(http.StatusOK, response)
 }
 
 func GetTodayTransactions(c *gin.Context) {
-	offsetStr := c.Query("offset")
-	limitStr := c.Query("limit")
-
-	offset, err := strconv.Atoi(offsetStr)
-	if err != nil || offset < 0 {
-		offset = 0
-	}
-
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil || limit < 1 {
-		limit = defaultLimit
-	}
-
-	transactions, err := controllers.GetTodayTransactions()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	username := c.Query("username")
-
-	response := make([]gin.H, 0)
-	today := time.Now().Format("02-01-2006")
-	for _, transaction := range transactions[offset : offset+limit] {
-		transactionDate := transaction.Date.Format("02-01-2006")
-		if transactionDate == today && (username == "" || transaction.User.Username == username) {
-			response = append(response, gin.H{
-				"id":     transaction.ID,
-				"name":   transaction.User.Username,
-				"date":   transactionDate,
-				"status": transaction.StatusId,
-			})
-		}
-	}
-
-	c.JSON(http.StatusOK, response)
+	//offsetStr := c.Query("offset")
+	//limitStr := c.Query("limit")
+	//
+	//offset, err := strconv.Atoi(offsetStr)
+	//if err != nil || offset < 0 {
+	//	offset = 0
+	//}
+	//
+	//limit, err := strconv.Atoi(limitStr)
+	//if err != nil || limit < 1 {
+	//	limit = defaultLimit
+	//}
+	//
+	//transactions, err := controllers.GetTodayTransactions()
+	//if err != nil {
+	//	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	//	return
+	//}
+	//
+	//username := c.Query("username")
+	//
+	//response := make([]gin.H, 0)
+	//today := time.Now().Format("02-01-2006")
+	//for _, transaction := range transactions[offset : offset+limit] {
+	//	transactionDate := transaction.Date.Format("02-01-2006")
+	//	if transactionDate == today && (username == "" || transaction.User.Username == username) {
+	//		response = append(response, gin.H{
+	//			"id":     transaction.ID,
+	//			"name":   transaction.User.Username,
+	//			"date":   transactionDate,
+	//			"status": transaction.StatusId,
+	//		})
+	//	}
+	//}
+	//
+	//c.JSON(http.StatusOK, response)
 }

@@ -4,8 +4,8 @@ import "time"
 
 type Transaction struct {
 	ID                uint64              `gorm:"primary_key:auto_increment" json:"id"`
-	UserId            int                 `gorm:"not null" json:"user_id"`
-	User              User                `gorm:"foreignkey:UserId"`
+	CustomerId        int                 `gorm:"not null" json:"customer_id"`
+	Customer          Customer            `gorm:"foreignkey:CustomerId"`
 	VehicleId         *int                `gorm:"default:null" json:"vehicle_id"`
 	Vehicle           Vehicle             `gorm:"foreignkey:VehicleId"`
 	OfficerId         int                 `gorm:"not null" json:"officer_id"`

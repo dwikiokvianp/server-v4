@@ -204,7 +204,6 @@ func CreateProof(c *gin.Context) {
 	fmt.Println(transactionIdInt)
 
 	historyOut.Date = time.Now()
-	historyOut.UserId = transaction.UserId
 	historyOut.TransactionId = transactionIdInt
 
 	fmt.Println(transaction.TransactionDetail)
@@ -212,7 +211,6 @@ func CreateProof(c *gin.Context) {
 	for _, item := range transaction.TransactionDetail {
 		historyOut := models.HistoryOut{
 			Date:          time.Now(),
-			UserId:        transaction.UserId,
 			TransactionId: transactionIdInt,
 			Quantity:      int(item.Quantity),
 			OilId:         int(item.OilID),
