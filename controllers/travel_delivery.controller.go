@@ -15,7 +15,7 @@ func CreateTravelOrder(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&travelDeliveryInput); err != nil {
 		c.JSON(400, gin.H{
-			"message": "Failed to bind gagal",
+			"message": "Failed to bind json",
 		})
 		return
 	}
