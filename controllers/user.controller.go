@@ -19,8 +19,6 @@ func CreateUser(c *gin.Context) {
 		Username: userInput.Username,
 		Password: userInput.Password,
 		Email:    userInput.Email,
-		RoleId:   userInput.RoleId,
-		DetailId: userInput.DetailId,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {

@@ -129,6 +129,18 @@ func GenerateVehicleType(vehicleTypes []string) {
 	}
 }
 
+func GenerateCustomerType() {
+	for _, customerType := range []string{"Retail", "Corporate"} {
+		customerType := models.CustomerType{
+			Name: customerType,
+		}
+		err := config.DB.Create(&customerType).Error
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
 func GenerateFakeUsers(count, role int) {
 	fake := faker.New()
 	for i := 0; i < count; i++ {
@@ -138,18 +150,27 @@ func GenerateFakeUsers(count, role int) {
 			fmt.Println(err)
 		} else {
 			user := models.User{
-				Username:  fake.Person().LastName(),
-				Password:  fake.Internet().Password(),
-				Email:     fake.Internet().Email(),
-				RoleId:    role,
-				DetailId:  detail.Id,
-				CompanyID: 2,
-				Phone:     fake.Phone().Number(),
+				Username: fake.Person().LastName(),
+				Password: fake.Internet().Password(),
+				Email:    fake.Internet().Email(),
 			}
 			err := config.DB.Create(&user).Error
 			if err != nil {
 				fmt.Println(err)
 			}
+			customer := models.Customer{
+				UserId:         user.Id,
+				CustomerTypeId: 1,
+				DetailId:       1,
+				CompanyID:      1,
+				Phone:          fake.Internet().User(),
+			}
+
+			err = config.DB.Create(&customer).Error
+			if err != nil {
+				fmt.Println(err)
+			}
+
 		}
 	}
 }
@@ -283,10 +304,6 @@ func generateSomeUser(data User) {
 	admin.Username = data.Username
 	admin.Password = data.Password
 	admin.Email = data.Email
-	admin.RoleId = data.RoleId
-	admin.CompanyID = data.CompanyID
-	admin.Phone = data.Phone
-	admin.DetailId = detail.Id
 	err = config.DB.Create(&admin).Error
 	if err != nil {
 		fmt.Println(err)
@@ -325,6 +342,7 @@ func main() {
 	}
 
 	GenerateStatus(status)
+	GenerateCustomerType()
 
 	vehicleTypes := []string{"SHIP", "TRUCK"}
 	GenerateRoles(roles)
@@ -339,11 +357,11 @@ func main() {
 	generateVehicle(2, 1)
 	generateVehicle(2, 2)
 
-	GenerateFakeUsers(10, 1)
-	GenerateFakeUsers(10, 2)
-	GenerateFakeUsers(10, 3)
-	GenerateFakeUsers(10, 4)
-	GenerateFakeUsers(10, 5)
+	GenerateFakeUsers(5, 1)
+	GenerateFakeUsers(5, 2)
+	GenerateFakeUsers(5, 3)
+	GenerateFakeUsers(5, 4)
+	GenerateFakeUsers(5, 5)
 	generateSomeUser(User{
 		Username:  "admin",
 		Password:  "admin",

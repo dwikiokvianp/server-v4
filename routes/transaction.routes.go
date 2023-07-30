@@ -88,10 +88,8 @@ func GetTomorrowTransactions(c *gin.Context) {
 		return
 	}
 
-	// Get query parameter "username" from the URL
 	username := c.Query("username")
 
-	// Create a slice to store transaction objects in the desired format
 	response := make([]gin.H, 0)
 	tomorrow := time.Now().Add(24 * time.Hour).Format("02-01-2006")
 	for _, transaction := range transactions[offset : offset+limit] {
@@ -100,7 +98,6 @@ func GetTomorrowTransactions(c *gin.Context) {
 			response = append(response, gin.H{
 				"id":     transaction.ID,
 				"name":   transaction.User.Username,
-				"phone":  transaction.User.Phone,
 				"date":   transactionDate,
 				"status": transaction.StatusId,
 			})
@@ -140,7 +137,6 @@ func GetTodayTransactions(c *gin.Context) {
 			response = append(response, gin.H{
 				"id":     transaction.ID,
 				"name":   transaction.User.Username,
-				"phone":  transaction.User.Phone,
 				"date":   transactionDate,
 				"status": transaction.StatusId,
 			})

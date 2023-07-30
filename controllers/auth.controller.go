@@ -47,12 +47,9 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	user := models.User{
-		Username:  input.Username,
-		Email:     input.Email,
-		Password:  input.Password,
-		RoleId:    4,
-		DetailId:  detail.Id,
-		CompanyID: input.CompanyID,
+		Username: input.Username,
+		Email:    input.Email,
+		Password: input.Password,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
@@ -89,20 +86,24 @@ func LoginUser(c *gin.Context) {
 	}
 
 	id := strconv.Itoa(user.Id)
-	token, err := utils.GenerateJWT(user.Email, user.Role.Role, id)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+
+	employee := models.Employee{}
+	if err := config.DB.Where("user_id = ?", user.Id).First(&employee).Error; err == nil {
+		token, err := utils.GenerateJWT(user.Email, employee.Role.Role, id)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		response := models.Token{
+			TokenString: token,
+			Email:       user.Email,
+			Role:        employee.Role.Role,
+			Name:        user.Username,
+			Id:          user.Id,
+		}
+
+		c.JSON(200, gin.H{"message": "Login success", "token": response})
 		return
 	}
-
-	response := models.Token{
-		TokenString: token,
-		Email:       user.Email,
-		Role:        user.Role.Role,
-		Name:        user.Username,
-		Id:          user.Id,
-	}
-
-	c.JSON(200, gin.H{"message": "Login success", "token": response})
-
 }

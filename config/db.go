@@ -68,4 +68,6 @@ var modelsToMigrate = []interface{}{
 	&models.DeliveryOrderRecipientDetail{},
 	&models.DeliveryOrderWarehouseDetail{},
 	&models.Handover{},
+	&models.Customer{},
+	&models.CustomerType{},
 }

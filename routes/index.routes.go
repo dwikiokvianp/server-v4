@@ -2,14 +2,14 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"server-v2/middleware"
 )
 
 func Routes(c *gin.Engine) {
 	AuthRoutes(c)
-	c.Use(middleware.AuthMiddleware())
+	//c.Use(middleware.AuthMiddleware())
 	UserRoutes(c)
 	StatusRoutes(c)
+	CustomerRoutes(c)
 	CityRoutes(c)
 	DeliveryOrderRoutes(c)
 	HandoverRoutes(c)
