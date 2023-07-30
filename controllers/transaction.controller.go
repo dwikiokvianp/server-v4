@@ -48,7 +48,6 @@ func CreateTransactions(c *gin.Context) {
 		Date:       inputTransaction.Date,
 		CityId:     inputTransaction.CityId,
 		ProvinceId: inputTransaction.ProvinceId,
-		DriverId:   inputTransaction.DriverId,
 		StatusId:   inputTransaction.StatusId,
 	}
 
@@ -335,7 +334,6 @@ func UpdateTransactionBatch(c *gin.Context) {
 		}
 
 		transaction.VehicleId = id.VehicleId
-		transaction.DriverId = id.DriverId
 
 		transaction.StatusId = statusInt
 
@@ -386,7 +384,6 @@ func UpdateTransaction(c *gin.Context) {
 	transaction.ProvinceId = updateRequest.ProvinceID
 	transaction.CityId = updateRequest.CityID
 	transaction.VehicleId = updateRequest.VehicleID
-	transaction.DriverId = updateRequest.DriverID
 	transaction.StatusId = updateRequest.StatusId
 
 	// Update detail transaksi

@@ -19,8 +19,6 @@ type Transaction struct {
 	CreatedAt         int64               `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt         int64               `gorm:"autoUpdateTime" json:"updated_at"`
 	Date              time.Time           `json:"date"`
-	DriverId          int                 `json:"driver_id"`
-	Driver            User                `gorm:"foreignkey:DriverId" json:"driver"`
 	TransactionDetail []TransactionDetail `json:"transaction_detail"`
 	StatusId          int                 `json:"status_id"`
 	Status            StatusTypeMapping   `gorm:"foreignkey:StatusId" json:"status"`
@@ -48,7 +46,6 @@ type TransactionInput struct {
 	Date              time.Time                `json:"date"`
 	CityId            int                      `gorm:"not null" json:"city_id"`
 	ProvinceId        int                      `gorm:"not null" json:"province_id"`
-	DriverId          int                      `json:"driver_id"`
 	TransactionDetail []TransactionDetailInput `json:"transaction_detail"`
 	StorageId         int                      `json:"storage_id"`
 	StatusId          int                      `json:"status_id"`

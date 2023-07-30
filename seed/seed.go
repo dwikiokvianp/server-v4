@@ -191,16 +191,26 @@ func GenerateOil(oils []string, warehouseId int) {
 }
 
 func generateVehicle(num, vehicleType int) {
-	fake := faker.New()
 	for i := 0; i < num; i++ {
-		vehicle := models.Vehicle{
-			Name:          fake.Car().Model(),
-			VehicleTypeId: vehicleType,
+		fake := faker.New()
+
+		identifier := models.VehicleIdentifier{
+			Identifier: fake.RandomLetter(),
 		}
-		err := config.DB.Create(&vehicle).Error
+
+		err := config.DB.Create(&identifier).Error
 		if err != nil {
-			fmt.Println(err)
+			vehicle := models.Vehicle{
+				Name:                fake.Car().Model(),
+				VehicleTypeId:       vehicleType,
+				VehicleIdentifierId: identifier.Id,
+			}
+			err := config.DB.Create(&vehicle).Error
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
+
 	}
 }
 
@@ -326,8 +336,8 @@ func main() {
 	oils := []string{"HSD", "MFO"}
 	GenerateOil(oils, 1)
 
-	generateVehicle(10, 1)
-	generateVehicle(10, 2)
+	generateVehicle(2, 1)
+	generateVehicle(2, 2)
 
 	GenerateFakeUsers(10, 1)
 	GenerateFakeUsers(10, 2)
