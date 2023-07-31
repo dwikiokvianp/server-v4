@@ -9,6 +9,7 @@ func Routes(c *gin.Engine) {
 	//c.Use(middleware.AuthMiddleware())
 	UserRoutes(c)
 	StatusRoutes(c)
+	EmployeeRoutes(c)
 	CustomerRoutes(c)
 	CityRoutes(c)
 	DeliveryOrderRoutes(c)

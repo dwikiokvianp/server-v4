@@ -266,13 +266,14 @@ func GetUserTransaction(c *gin.Context) {
 
 	dbQuery := config.DB.
 		Where("date >= ?", fromDate.Format("2006-01-02")).
-		Preload("User.Company").
+		Preload("Customer.User").
+		Preload("Customer.Company").
 		Preload("TransactionDetail").
 		Preload("Status.StatusType").
 		Order("date desc")
 
 	if userId != "" {
-		dbQuery = dbQuery.Where("user_id = ?", userId)
+		dbQuery = dbQuery.Where("customer_id = ?", userId)
 	}
 
 	var totalRecords int64

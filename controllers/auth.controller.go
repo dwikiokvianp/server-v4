@@ -88,7 +88,10 @@ func LoginUser(c *gin.Context) {
 	id := strconv.Itoa(user.Id)
 
 	employee := models.Employee{}
-	if err := config.DB.Where("user_id = ?", user.Id).First(&employee).Error; err == nil {
+	if err := config.DB.
+		Where("user_id = ?", user.Id).
+		Preload("Role").
+		First(&employee).Error; err == nil {
 		token, err := utils.GenerateJWT(user.Email, employee.Role.Role, id)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
