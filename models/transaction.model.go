@@ -22,6 +22,7 @@ type Transaction struct {
 	TransactionDetail []TransactionDetail `json:"transaction_detail"`
 	StatusId          int                 `json:"status_id"`
 	Status            StatusTypeMapping   `gorm:"foreignkey:StatusId" json:"status"`
+	IsFinished        bool                `gorm:"default:false" json:"is_finished"`
 }
 
 type PostponeHistory struct {
