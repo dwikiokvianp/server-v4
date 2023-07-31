@@ -253,6 +253,8 @@ func GetTravelOrderById(c *gin.Context) {
 		Preload("DeliveryOrderRecipientDetail.Transaction.Customer.User").
 		Preload("DeliveryOrderRecipientDetail.Transaction.Customer.Company").
 		Preload("DeliveryOrderRecipientDetail.Transaction.Vehicle").
+		Preload("DeliveryOrderRecipientDetail.Transaction.Status.Status").
+		Preload("DeliveryOrderRecipientDetail.Transaction.TransactionDetail.Oil").
 		First(&travelOrder).Error; err != nil {
 		c.JSON(400, gin.H{
 			"message": "Travel order not found",
