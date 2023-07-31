@@ -305,6 +305,7 @@ type User struct {
 }
 
 func generateSomeUser(data User, role int) {
+	fake := faker.New()
 	var user models.User
 
 	var detail models.Detail
@@ -322,8 +323,9 @@ func generateSomeUser(data User, role int) {
 	}
 
 	employee := models.Employee{
-		UserId: user.Id,
-		RoleId: role,
+		UserId:      user.Id,
+		RoleId:      role,
+		PhoneNumber: fake.Phone().Number(),
 	}
 
 	err = config.DB.Create(&employee).Error
