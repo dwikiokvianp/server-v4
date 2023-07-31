@@ -71,12 +71,21 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
+	totalQuantityMFO := 0
+	totalQuantityHSD := 0
+
 	for _, detail := range inputTransaction.TransactionDetail {
 		transactionDetail := models.TransactionDetail{
 			Quantity:      detail.Quantity,
 			TransactionID: int64(transaction.ID),
 			StorageID:     detail.StorageId,
 			OilID:         detail.OilID,
+		}
+
+		if detail.OilID == 1 {
+			totalQuantityMFO += int(detail.Quantity)
+		} else {
+			totalQuantityHSD += int(detail.Quantity)
 		}
 		transactionDetails = append(transactionDetails, transactionDetail)
 	}
@@ -166,6 +175,57 @@ func CreateTransactions(c *gin.Context) {
 			"error": err.Error(),
 		})
 		return
+	}
+
+	if inputTransaction.StatusId == 3 {
+		kelipatan := 8000
+		if totalQuantityMFO > 0 {
+			totalTravel := totalQuantityMFO / kelipatan
+
+			travelOrder := models.TravelOrder{
+				DriverId:  1,
+				Status:    "created",
+				OfficerId: 1,
+				VehicleId: 1,
+			}
+
+			if err := config.DB.Create(&travelOrder).Error; err != nil {
+				c.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			for i := 0; i < totalTravel; i++ {
+				deliveryOrder := models.DeliveryOrder{
+					TravelOrderID: travelOrder.ID,
+					OilId:         2,
+				}
+
+				if err := config.DB.Create(&deliveryOrder).Error; err != nil {
+					c.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+				deliveryOrderRecipientDetail := models.DeliveryOrderRecipientDetail{
+					DeliveryOrderID: deliveryOrder.ID,
+					TransactionID:   int64(int(transaction.ID)),
+					OilId:           1,
+					Quantity:        int64(8000),
+					ProvinceId:      1,
+					CityId:          1,
+				}
+
+				if err := config.DB.Create(&deliveryOrderRecipientDetail).Error; err != nil {
+					c.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+
+			}
+		}
 	}
 
 	c.JSON(200, gin.H{
@@ -392,7 +452,6 @@ func UpdateTransaction(c *gin.Context) {
 	transaction.VehicleId = updateRequest.VehicleID
 	transaction.StatusId = updateRequest.StatusId
 
-	// Update detail transaksi
 	transaction.TransactionDetail = []models.TransactionDetail{}
 	for _, detail := range updateRequest.TransactionDetails {
 		transactionDetail := models.TransactionDetail{

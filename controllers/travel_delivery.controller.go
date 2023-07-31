@@ -73,16 +73,6 @@ func CreateTravelOrder(c *gin.Context) {
 				TransactionID:   recipientDetail.TransactionID,
 			}
 
-			transaction := models.Transaction{}
-			user := models.User{}
-
-			if err := config.DB.Where("id = ?", recipientDetail.TransactionID).First(&transaction).Error; err != nil {
-				c.JSON(400, gin.H{
-					"message": err.Error(),
-				})
-				return
-			}
-
 			if err := config.DB.Create(&deliveryOrderRecipientDetail).Error; err != nil {
 				c.JSON(400, gin.H{
 					"message": err.Error(),
@@ -108,7 +98,6 @@ func CreateTravelOrder(c *gin.Context) {
 				return
 			}
 
-			email := user.Email
 			err = utils.SendEmail("dwikiokvianp1999@gmail.com", "Qr Code Transaction", "Body", qrFile)
 			if err != nil {
 				c.JSON(500, gin.H{
@@ -116,8 +105,6 @@ func CreateTravelOrder(c *gin.Context) {
 				})
 				return
 			}
-
-			fmt.Println("berhasil kirim email ke ", email)
 
 			myTransaction := models.Transaction{}
 			fmt.Println(recipientDetail.TransactionID)

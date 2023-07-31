@@ -4,17 +4,17 @@ import "time"
 
 type TravelOrder struct {
 	ID                           int64                          `gorm:"primary_key;auto_increment" json:"id"`
-	DriverId                     int                            `gorm:"not null" json:"driver_id"`
+	DriverId                     int                            `json:"driver_id"`
 	Driver                       Employee                       `json:"driver" gorm:"foreignkey:DriverId"`
-	PickupLocation               string                         `gorm:"not null" json:"pickup_location"`
-	DepartureDate                time.Time                      `gorm:"not null" json:"departure_date"`
-	Message                      string                         `gorm:"not null" json:"message"`
-	Status                       string                         `gorm:"not null" json:"status"`
-	OfficerId                    int                            `gorm:"not null" json:"officer_id"`
+	PickupLocation               string                         ` json:"pickup_location"`
+	DepartureDate                time.Time                      ` json:"departure_date"`
+	Message                      string                         ` json:"message"`
+	Status                       string                         ` json:"status"`
+	OfficerId                    int                            ` json:"officer_id"`
 	Officer                      User                           `json:"officer" gorm:"foreignkey:OfficerId"`
 	Vehicle                      Vehicle                        `json:"vehicle"`
-	VehicleId                    int64                          `gorm:"not null" json:"vehicle_id"`
-	Quantity                     int64                          `gorm:"not null" json:"quantity"`
+	VehicleId                    int64                          ` json:"vehicle_id"`
+	Quantity                     int64                          ` json:"quantity"`
 	DeliveryOrderRecipientDetail []DeliveryOrderRecipientDetail `gorm:"foreignkey:delivery_order_id" json:"recipient_detail"`
 	DeliveryOrderWarehouseDetail []DeliveryOrderWarehouseDetail `gorm:"foreignkey:delivery_order_id" json:"warehouse_detail"`
 }
