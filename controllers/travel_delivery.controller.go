@@ -45,7 +45,7 @@ func CreateTravelOrder(c *gin.Context) {
 
 	if err := config.DB.Create(&travelOrder).Error; err != nil {
 		c.JSON(400, gin.H{
-			"message": "Failed to created travel order",
+			"message": err.Error(),
 		})
 		return
 	}
@@ -66,7 +66,6 @@ func CreateTravelOrder(c *gin.Context) {
 		for _, recipientDetail := range travelDeliveryInput.RecipientDetail {
 			deliveryOrderRecipientDetail := models.DeliveryOrderRecipientDetail{
 				DeliveryOrderID: deliveryOrder.ID,
-				UserId:          recipientDetail.UserId,
 				Quantity:        recipientDetail.Quantity,
 				ProvinceId:      recipientDetail.ProvinceId,
 				CityId:          recipientDetail.CityId,
@@ -74,11 +73,10 @@ func CreateTravelOrder(c *gin.Context) {
 				TransactionID:   recipientDetail.TransactionID,
 			}
 
+			transaction := models.Transaction{}
 			user := models.User{}
 
-			fmt.Println("recipientDetail.UserId", recipientDetail.UserId)
-
-			if err := config.DB.Where("id = ?", recipientDetail.UserId).First(&user).Error; err != nil {
+			if err := config.DB.Where("id = ?", recipientDetail.TransactionID).First(&transaction).Error; err != nil {
 				c.JSON(400, gin.H{
 					"message": err.Error(),
 				})
@@ -201,7 +199,9 @@ func GetTravelOrder(c *gin.Context) {
 
 	if err := config.DB.
 		Preload("DeliveryOrderRecipientDetail.Transaction.User.Company").
-		Preload("Driver").
+		Preload("Driver.User").
+		Preload("Vehicle.VehicleIdentifier").
+		Preload("RecipientDetail").
 		Offset(offset).
 		Limit(limitInt).
 		Find(&travelOrder).Error; err != nil {

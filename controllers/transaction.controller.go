@@ -217,11 +217,14 @@ func GetAllTransactions(c *gin.Context) {
 
 	err := db.Offset(offset).Limit(pageSize).
 		Where("status_id = ?", statusId).
-		Preload("User.Company").
+		Preload("Customer.User").
+		Preload("Customer.Company").
 		Preload("Vehicle.VehicleType").
 		Preload("Officer").
 		Preload("Province").
 		Preload("City").
+		Preload("Status.StatusType").
+		Preload("Status.Status").
 		Preload("TransactionDetail.Oil").
 		Order("updated_at desc").
 		Find(&transactions).Error
@@ -416,14 +419,16 @@ func GetByIdTransaction(c *gin.Context) {
 	var transaction models.Transaction
 	id := c.Param("id")
 	err := config.DB.
+		Preload("Customer.User").
+		Preload("Customer.Company").
+		Preload("Vehicle.VehicleType").
+		Preload("Officer").
+		Preload("Province").
+		Preload("City").
+		Preload("Status.StatusType").
+		Preload("Status.Status").
 		Preload("TransactionDetail.Oil").
-		Joins("Vehicle.VehicleType").
-		Joins("User.Role").
-		Joins("Officer").
-		Joins("User.Detail").
-		Joins("User.Company").
-		Joins("Status.StatusType").
-		Joins("Status.Status").
+		Order("updated_at desc").
 		Find(&transaction, id).Error
 	if err != nil {
 		c.JSON(400, gin.H{

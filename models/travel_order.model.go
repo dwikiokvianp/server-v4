@@ -5,7 +5,7 @@ import "time"
 type TravelOrder struct {
 	ID                           int64                          `gorm:"primary_key;auto_increment" json:"id"`
 	DriverId                     int                            `gorm:"not null" json:"driver_id"`
-	Driver                       User                           `json:"driver" gorm:"foreignkey:DriverId"`
+	Driver                       Employee                       `json:"driver" gorm:"foreignkey:DriverId"`
 	PickupLocation               string                         `gorm:"not null" json:"pickup_location"`
 	DepartureDate                time.Time                      `gorm:"not null" json:"departure_date"`
 	Message                      string                         `gorm:"not null" json:"message"`

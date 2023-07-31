@@ -229,15 +229,17 @@ func generateVehicle(num, vehicleType int) {
 
 		err := config.DB.Create(&identifier).Error
 		if err != nil {
-			vehicle := models.Vehicle{
-				Name:                fake.Car().Model(),
-				VehicleTypeId:       vehicleType,
-				VehicleIdentifierId: identifier.Id,
-			}
-			err := config.DB.Create(&vehicle).Error
-			if err != nil {
-				fmt.Println(err)
-			}
+			fmt.Println(err)
+		}
+		vehicle := models.Vehicle{
+			Name:                fake.Car().Model(),
+			VehicleTypeId:       1,
+			VehicleIdentifierId: identifier.Id,
+		}
+
+		err = config.DB.Create(&vehicle).Error
+		if err != nil {
+			fmt.Println(err)
 		}
 
 	}
