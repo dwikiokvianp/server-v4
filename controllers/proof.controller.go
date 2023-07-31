@@ -318,11 +318,15 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	pdf.SetAuthor("Your Company", true)
 	pdf.AddPage()
 
+   	// // Sisipkan garis pembatas
+	// pdf.SetLineWidth(0.5)
+	// pdf.Line(10, 35, 200, 35)
+
+	// pdf.SetFont("Arial", "", 12)
+
 	pdf.SetFont("Arial", "B", 18)
 	pdf.Cell(0, 10, "Invoice")
 	pdf.Ln(12)
-
-	pdf.SetFont("Arial", "", 12)
 
 	pdf.SetFont("Arial", "B", 12)
 	pdf.Cell(40, 10, "Company:")
@@ -330,21 +334,22 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	pdf.Cell(40, 10, company.CompanyName)
 	pdf.Ln(8)
 
+	// Tambahkan alamat perusahaan
 	pdf.SetFont("Arial", "B", 12)
 	pdf.Cell(40, 10, "Address:")
-
 	cleanAddress := strings.Replace(company.Address, "%68", "", -1)
-
 	pdf.SetFont("Arial", "", 12)
 	pdf.Cell(0, 10, cleanAddress)
 	pdf.Ln(12)
 
+	// Tambahkan alamat email transaksi
 	pdf.SetFont("Arial", "B", 12)
 	pdf.Cell(40, 10, "Email:")
 	pdf.SetFont("Arial", "", 12)
 	pdf.Cell(40, 10, transaction.Email)
 	pdf.Ln(12)
 
+	// Tambahkan status transaksi
 	var status models.Status
 	if err := config.DB.First(&status, transaction.StatusId).Error; err != nil {
 		log.Println("Gagal mendapatkan status transaksi:", err.Error())
@@ -356,11 +361,11 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	pdf.Cell(0, 10, status.Name)
 	pdf.Ln(8)
 
+	// Tambahkan tanda tangan (jika tersedia)
 	pageWidth, pageHeight := pdf.GetPageSize()
 
-	// Embed signature image from local file
 	if signaturePath != "" {
-		signatureWidth := 60.0
+		signatureWidth := 100.0
 		signatureHeight := 30.0
 		signatureX := (pageWidth - signatureWidth) / 2
 		signatureY := pageHeight - signatureHeight - 20
@@ -374,17 +379,23 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	// Header tabel
 	pdf.Rect(10, 100, 190, 10, "F")
 
-	cellWidth := 47.5
+	cellWidth := 63.3333
 	cellHeight := 10.0
 
 	pdf.SetFont("Arial", "B", 12)
 	pdf.SetFillColor(220, 220, 220)
 	pdf.SetTextColor(0, 0, 0)
 
-	pdf.CellFormat(cellWidth, cellHeight, "ID", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cellWidth, cellHeight, "Name", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cellWidth, cellHeight, "Storage ID", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cellWidth, cellHeight, "Quantity", "1", 0, "C", true, 0, "")
+	// Gabungkan tabel header dengan data minyak
+	header := []string{"ID", "Name", "Storage ID, Quantity"}
+
+	for i, colName := range header {
+		x := 10.0 + float64(i)*cellWidth
+		y := 100.0 + 0.5*(10.0-cellHeight)
+		pdf.Rect(x, y, cellWidth, cellHeight, "F")
+		pdf.SetXY(x, y)
+		pdf.CellFormat(cellWidth, cellHeight, colName, "1", 0, "C", true, 0, "")
+	}
 
 	// Data minyak
 	pdf.SetFont("Arial", "", 12)
