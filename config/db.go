@@ -47,7 +47,6 @@ var modelsToMigrate = []interface{}{
 	&models.DeliveryOrder{},
 	&models.TravelOrder{},
 	&models.Warehouse{},
-	&models.WarehouseDetail{},
 	&models.User{},
 	&models.Oil{},
 	&models.Status{},

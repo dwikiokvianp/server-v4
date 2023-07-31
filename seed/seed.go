@@ -142,8 +142,8 @@ func GenerateCustomerType() {
 }
 
 func GenerateFakeUsers(count int) {
-	fake := faker.New()
 	for i := 0; i < count; i++ {
+		fake := faker.New()
 		detail := GenerateFakeDetail()
 		err := config.DB.Create(&detail).Error
 		if err != nil {
@@ -175,40 +175,48 @@ func GenerateFakeUsers(count int) {
 	}
 }
 
-func GenerateOil(oils []string, warehouseId int) {
-	detailWarehouse := models.WarehouseDetail{
-		WarehouseID: uint64(warehouseId),
-	}
+func GenerateOil(oils, warehouse []string) {
 
-	err := config.DB.Create(&detailWarehouse).Error
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	for _, oil := range oils {
-
-		storage := models.Storage{
-			Name:              fmt.Sprintf("%s Storage", oil),
-			Quantity:          80_000,
-			WarehouseDetailID: detailWarehouse.ID,
-			OilID:             1,
+	for _, wareHouseData := range warehouse {
+		wareHouse := models.Warehouse{
+			Name:       fmt.Sprintf("Warehouse %v", wareHouseData),
+			Location:   "Jakarta",
+			ProvinceId: 1,
+			CityId:     2,
 		}
 
-		err := config.DB.Create(&storage).Error
+		err := config.DB.Create(&wareHouse).Error
 		if err != nil {
 			fmt.Println(err)
 		}
 
-		oil := models.Oil{
-			Name:      oil,
-			StorageId: int(storage.ID),
-		}
+		for _, oil := range oils {
 
-		err = config.DB.Create(&oil).Error
-		if err != nil {
-			fmt.Println(err)
+			storage := models.Storage{
+				Name:        fmt.Sprintf("%s Storage", oil),
+				Quantity:    80_000,
+				WarehouseID: wareHouse.Id,
+				Capacity:    1000_000,
+				OilID:       1,
+			}
+
+			err := config.DB.Create(&storage).Error
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			oil := models.Oil{
+				Name:      oil,
+				StorageId: int(storage.ID),
+			}
+
+			err = config.DB.Create(&oil).Error
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
+
 }
 
 func generateVehicle(num, vehicleType int) {
@@ -279,16 +287,14 @@ func generateFakeEmployee(num, roleInput int) {
 }
 
 type User struct {
-	Username  string
-	Password  string
-	Email     string
-	RoleId    int
-	CompanyID int
-	Phone     string
+	Username string
+	Password string
+	Email    string
+	Phone    string
 }
 
-func generateSomeUser(data User) {
-	var admin models.User
+func generateSomeUser(data User, role int) {
+	var user models.User
 
 	var detail models.Detail
 
@@ -300,10 +306,20 @@ func generateSomeUser(data User) {
 		fmt.Println(err)
 	}
 
-	admin.Username = data.Username
-	admin.Password = data.Password
-	admin.Email = data.Email
-	err = config.DB.Create(&admin).Error
+	user.Username = data.Username
+	user.Password = data.Password
+	user.Email = data.Email
+	err = config.DB.Create(&user).Error
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	employee := models.Employee{
+		UserId: user.Id,
+		RoleId: role,
+	}
+
+	err = config.DB.Create(&employee).Error
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -355,70 +371,57 @@ func main() {
 	generateFakeEmployee(10, 4)
 	generateFakeEmployee(10, 5)
 	oils := []string{"HSD", "MFO"}
-	GenerateOil(oils, 1)
+	warehouse := []string{"Jetty", "SPOB"}
+	GenerateOil(oils, warehouse)
 
 	generateVehicle(2, 1)
 	generateVehicle(2, 2)
 
 	GenerateFakeUsers(5)
 	generateSomeUser(User{
-		Username:  "admin",
-		Password:  "admin",
-		Email:     "admin@gmail.com",
-		RoleId:    1,
-		CompanyID: 1,
-		Phone:     "08123456789",
-	})
+		Username: "admin",
+		Password: "admin",
+		Email:    "admin@gmail.com",
+		Phone:    "08123456789",
+	}, 1)
 	generateSomeUser(User{
-		Username:  "adminsales",
-		Password:  "adminsales",
-		Email:     "adminsales@gmail.com",
-		RoleId:    2,
-		CompanyID: 1,
-		Phone:     "08123456789",
-	})
+		Username: "adminsales",
+		Password: "adminsales",
+		Email:    "adminsales@gmail.com",
+		Phone:    "08123456789",
+	}, 2)
 
 	generateSomeUser(User{
-		Username:  "petugas",
-		Password:  "petugas",
-		Email:     "petugas@gmail.com",
-		RoleId:    3,
-		CompanyID: 1,
-		Phone:     "08123456789",
-	})
+		Username: "petugas",
+		Password: "petugas",
+		Email:    "petugas@gmail.com",
+		Phone:    "08123456789",
+	}, 3)
 
 	generateSomeUser(User{
-		Username:  "dwiki",
-		Password:  "dwiki",
-		Email:     "dwikiokvianp1999@gmail.com",
-		RoleId:    4,
-		CompanyID: 1,
-		Phone:     "08123456789",
-	})
+		Username: "dwiki",
+		Password: "dwiki",
+		Email:    "dwikiokvianp1999@gmail.com",
+		Phone:    "08123456789",
+	}, 4)
 	generateSomeUser(User{
-		Username:  "driver1",
-		Password:  "driver1",
-		Email:     "driver1@gmail.com",
-		RoleId:    5,
-		CompanyID: 1,
-		Phone:     "08123456789",
-	})
+		Username: "driver1",
+		Password: "driver1",
+		Email:    "driver1@gmail.com",
+		Phone:    "08123456789",
+	}, 5)
 	generateSomeUser(User{
-		Username:  "driver2",
-		Password:  "driver2",
-		Email:     "driver2@gmail.com",
-		RoleId:    5,
-		CompanyID: 1,
-		Phone:     "08123456789",
-	})
+		Username: "driver2",
+		Password: "driver2",
+		Email:    "driver2@gmail.com",
+		Phone:    "08123456789",
+	}, 5)
 	generateSomeUser(User{
-		Username:  "driver3",
-		Password:  "driver3",
-		Email:     "driver3@gmail.com",
-		RoleId:    5,
-		CompanyID: 1,
-		Phone:     "08123456789",
-	})
+		Username: "driver3",
+		Password: "driver3",
+		Email:    "driver3@gmail.com",
+		Phone:    "08123456789",
+	}, 5)
 
 	fmt.Println("Migration finished")
 }
