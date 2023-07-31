@@ -198,15 +198,14 @@ func GetTravelOrder(c *gin.Context) {
 	totalPage := int(math.Ceil(float64(totalRecords) / float64(limitInt)))
 
 	if err := config.DB.
-		Preload("DeliveryOrderRecipientDetail.Transaction.User.Company").
 		Preload("Driver.User").
 		Preload("Vehicle.VehicleIdentifier").
-		Preload("RecipientDetail").
+		Preload("Vehicle.VehicleType").
 		Offset(offset).
 		Limit(limitInt).
 		Find(&travelOrder).Error; err != nil {
 		c.JSON(400, gin.H{
-			"message": "Failed to get travel order",
+			"message": err.Error(),
 		})
 		return
 	}
@@ -250,11 +249,10 @@ func GetTravelOrderById(c *gin.Context) {
 	id := c.Param("id")
 	var travelOrder models.TravelOrder
 	if err := config.DB.Where("id = ?", id).
-		Preload("DeliveryOrderRecipientDetail.Transaction.User.Company").
-		Preload("DeliveryOrderRecipientDetail.Transaction.TransactionDetail").
-		Preload("DeliveryOrderRecipientDetail.Transaction.Status.Status").
-		//Preload("DeliveryOrderRecipientDetail.Transaction.Warehouse").
-		Preload("Driver").
+		Preload("Driver.User").
+		Preload("DeliveryOrderRecipientDetail.Transaction.Customer.User").
+		Preload("DeliveryOrderRecipientDetail.Transaction.Customer.Company").
+		Preload("DeliveryOrderRecipientDetail.Transaction.Vehicle").
 		First(&travelOrder).Error; err != nil {
 		c.JSON(400, gin.H{
 			"message": "Travel order not found",
