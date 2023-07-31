@@ -261,9 +261,15 @@ func generateFakeCompany(num int) {
 	}
 }
 
-func generateFakeEmployee(num, roleInput int) {
+func generateFakeCustomer(num, roleInput int) {
 	for i := 0; i < num; i++ {
 		fake := faker.New()
+		detail := GenerateFakeDetail()
+
+		errCreateDetail := config.DB.Create(&detail).Error
+		if errCreateDetail != nil {
+			fmt.Println(errCreateDetail)
+		}
 
 		user := models.User{
 			Username: fake.Person().Name(),
@@ -275,13 +281,16 @@ func generateFakeEmployee(num, roleInput int) {
 		if err != nil {
 			fmt.Println(err)
 		}
-		employee := models.Employee{
-			UserId: user.Id,
-			RoleId: roleInput,
+		customer := models.Customer{
+			UserId:         user.Id,
+			CustomerTypeId: roleInput,
+			DetailId:       detail.Id,
+			CompanyID:      2,
+			Phone:          fake.Phone().Number(),
 		}
-		errCreateEmployee := config.DB.Create(&employee).Error
+		errCreateCustomer := config.DB.Create(&customer).Error
 		if err != nil {
-			fmt.Println(errCreateEmployee)
+			fmt.Println(errCreateCustomer)
 		}
 	}
 }
@@ -297,10 +306,6 @@ func generateSomeUser(data User, role int) {
 	var user models.User
 
 	var detail models.Detail
-
-	config.DB.Last(&detail)
-	detail.Id = detail.Id + 1
-
 	err := config.DB.Create(&detail).Error
 	if err != nil {
 		fmt.Println(err)
@@ -365,11 +370,8 @@ func main() {
 
 	generateFakeCompany(10)
 
-	generateFakeEmployee(10, 1)
-	generateFakeEmployee(10, 2)
-	generateFakeEmployee(10, 3)
-	generateFakeEmployee(10, 4)
-	generateFakeEmployee(10, 5)
+	generateFakeCustomer(10, 1)
+	generateFakeCustomer(10, 2)
 	oils := []string{"HSD", "MFO"}
 	warehouse := []string{"Jetty", "SPOB"}
 	GenerateOil(oils, warehouse)
