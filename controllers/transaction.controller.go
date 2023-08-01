@@ -196,11 +196,15 @@ func CreateTransactions(c *gin.Context) {
 				return
 			}
 
-			for i := 0; i < totalTravel; i++ {
+			fmt.Println("total travel", totalTravel)
+
+			for i := 0; i < totalTravel+1; i++ {
 				deliveryOrder := models.DeliveryOrder{
 					TravelOrderID: travelOrder.ID,
 					OilId:         2,
 				}
+
+				fmt.Println("masuk sini", i)
 
 				if err := config.DB.Create(&deliveryOrder).Error; err != nil {
 					c.JSON(500, gin.H{
