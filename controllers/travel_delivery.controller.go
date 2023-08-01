@@ -155,6 +155,7 @@ func GetTravelOrder(c *gin.Context) {
 	var travelOrder []models.TravelOrder
 	page := c.DefaultQuery("page", "1")
 	limit := c.DefaultQuery("limit", "10")
+	isAssigned := c.DefaultQuery("is_assigned", "false")
 
 	pageInt, err := strconv.Atoi(page)
 	if err != nil || pageInt < 1 {
@@ -185,6 +186,7 @@ func GetTravelOrder(c *gin.Context) {
 	totalPage := int(math.Ceil(float64(totalRecords) / float64(limitInt)))
 
 	if err := config.DB.
+		Where("is_assigned = ?", isAssigned).
 		Preload("Driver.User").
 		Preload("Vehicle.VehicleIdentifier").
 		Preload("Vehicle.VehicleType").

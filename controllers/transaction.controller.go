@@ -182,29 +182,26 @@ func CreateTransactions(c *gin.Context) {
 		if totalQuantityMFO > 0 {
 			totalTravel := totalQuantityMFO / kelipatan
 
-			travelOrder := models.TravelOrder{
-				DriverId:  1,
-				Status:    "created",
-				OfficerId: 1,
-				VehicleId: 1,
-			}
-
-			if err := config.DB.Create(&travelOrder).Error; err != nil {
-				c.JSON(500, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-
-			fmt.Println("total travel", totalTravel)
-
-			for i := 0; i < totalTravel+1; i++ {
-				deliveryOrder := models.DeliveryOrder{
-					TravelOrderID: travelOrder.ID,
-					OilId:         2,
+			for i := 0; i < totalTravel; i++ {
+				travelOrder := models.TravelOrder{
+					DriverId:  1,
+					Status:    "created",
+					OfficerId: 1,
+					VehicleId: 1,
 				}
 
-				fmt.Println("masuk sini", i)
+				if err := config.DB.Create(&travelOrder).Error; err != nil {
+					c.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+				deliveryOrder := models.DeliveryOrder{
+					TravelOrderID: travelOrder.ID,
+					OilId:         1,
+				}
+
+				fmt.Println("index", i)
 
 				if err := config.DB.Create(&deliveryOrder).Error; err != nil {
 					c.JSON(500, gin.H{
@@ -212,16 +209,18 @@ func CreateTransactions(c *gin.Context) {
 					})
 					return
 				}
-				deliveryOrderRecipientDetail := models.DeliveryOrderRecipientDetail{
-					DeliveryOrderID: deliveryOrder.ID,
-					TransactionID:   int64(int(transaction.ID)),
-					OilId:           1,
-					Quantity:        int64(8000),
-					ProvinceId:      1,
-					CityId:          1,
+
+				recipient := models.DeliveryOrderRecipientDetail{
+					DeliveryOrderID:   deliveryOrder.ID,
+					TransactionID:     int64(transaction.ID),
+					DeliveredQuantity: 10000,
+					OilId:             1,
+					Quantity:          8000,
+					ProvinceId:        2,
+					CityId:            2,
 				}
 
-				if err := config.DB.Create(&deliveryOrderRecipientDetail).Error; err != nil {
+				if err := config.DB.Create(&recipient).Error; err != nil {
 					c.JSON(500, gin.H{
 						"error": err.Error(),
 					})
