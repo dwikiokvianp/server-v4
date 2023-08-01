@@ -177,58 +177,25 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	if inputTransaction.StatusId == 3 {
-		kelipatan := 8000
+	if transaction.StatusId == 3 {
 		if totalQuantityMFO > 0 {
-			totalTravel := totalQuantityMFO / kelipatan
 
-			travelOrder := models.TravelOrder{
-				DriverId:  1,
-				Status:    "created",
-				OfficerId: 1,
-				VehicleId: 1,
-			}
+			totalPengirimanMFO := totalQuantityMFO / 8000
 
-			if err := config.DB.Create(&travelOrder).Error; err != nil {
-				c.JSON(500, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-
-			fmt.Println("total travel", totalTravel)
-
-			for i := 0; i < totalTravel+1; i++ {
-				deliveryOrder := models.DeliveryOrder{
-					TravelOrderID: travelOrder.ID,
-					OilId:         2,
+			for i := 0; i < totalPengirimanMFO; i++ {
+				transactionDelivery := models.TransactionDelivery{
+					TransactionID:  int64(transaction.ID),
+					DeliveryStatus: "pending",
 				}
 
-				fmt.Println("masuk sini", i)
-
-				if err := config.DB.Create(&deliveryOrder).Error; err != nil {
+				if err := config.DB.Create(&transactionDelivery).Error; err != nil {
 					c.JSON(500, gin.H{
 						"error": err.Error(),
 					})
 					return
 				}
-				deliveryOrderRecipientDetail := models.DeliveryOrderRecipientDetail{
-					DeliveryOrderID: deliveryOrder.ID,
-					TransactionID:   int64(int(transaction.ID)),
-					OilId:           1,
-					Quantity:        int64(8000),
-					ProvinceId:      1,
-					CityId:          1,
-				}
-
-				if err := config.DB.Create(&deliveryOrderRecipientDetail).Error; err != nil {
-					c.JSON(500, gin.H{
-						"error": err.Error(),
-					})
-					return
-				}
-
 			}
+
 		}
 	}
 

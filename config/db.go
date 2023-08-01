@@ -70,4 +70,5 @@ var modelsToMigrate = []interface{}{
 	&models.Customer{},
 	&models.CustomerType{},
 	&models.Employee{},
+	&models.TransactionDelivery{},
 }

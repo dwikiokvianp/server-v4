@@ -17,6 +17,7 @@ type TravelOrder struct {
 	Quantity                     int64                          ` json:"quantity"`
 	DeliveryOrderRecipientDetail []DeliveryOrderRecipientDetail `gorm:"foreignkey:delivery_order_id" json:"recipient_detail"`
 	DeliveryOrderWarehouseDetail []DeliveryOrderWarehouseDetail `gorm:"foreignkey:delivery_order_id" json:"warehouse_detail"`
+	IsAssigned                   bool                           `json:"is_assigned" default:"false"`
 }
 
 type TravelDeliveryInput struct {
