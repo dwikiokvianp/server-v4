@@ -6,7 +6,6 @@ import (
 	"math"
 	"server-v2/config"
 	"server-v2/models"
-	"server-v2/utils"
 	"strconv"
 )
 
@@ -62,88 +61,39 @@ func CreateTravelOrder(c *gin.Context) {
 		return
 	}
 
-	go func() {
-		for _, recipientDetail := range travelDeliveryInput.RecipientDetail {
-			deliveryOrderRecipientDetail := models.DeliveryOrderRecipientDetail{
-				DeliveryOrderID: deliveryOrder.ID,
-				Quantity:        recipientDetail.Quantity,
-				ProvinceId:      recipientDetail.ProvinceId,
-				CityId:          recipientDetail.CityId,
-				OilId:           travelDeliveryInput.OilId,
-				TransactionID:   recipientDetail.TransactionID,
-			}
-
-			if err := config.DB.Create(&deliveryOrderRecipientDetail).Error; err != nil {
-				c.JSON(400, gin.H{
-					"message": err.Error(),
-				})
-				return
-			}
-
-			qrData := recipientDetail.TransactionID
-			qrFile, err := utils.GenerateQRCode(strconv.FormatInt(qrData, 10))
-			if err != nil {
-				c.JSON(500, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-
-			key := fmt.Sprintf("qrcodes/%v.png", qrData)
-			qrURL, err := utils.UploadToS3(qrFile, key)
-			if err != nil {
-				c.JSON(500, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-
-			err = utils.SendEmail("dwikiokvianp1999@gmail.com", "Qr Code Transaction", "Body", qrFile)
-			if err != nil {
-				c.JSON(500, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-
-			myTransaction := models.Transaction{}
-			fmt.Println(recipientDetail.TransactionID)
-
-			if err := config.DB.Where("id = ?", recipientDetail.TransactionID).First(&myTransaction).Error; err != nil {
-				c.JSON(400, gin.H{
-					"message": err.Error(),
-				})
-				return
-			}
-
-			myTransaction.QrCodeUrl = qrURL
-
-			if err := config.DB.Save(&myTransaction).Error; err != nil {
-				c.JSON(400, gin.H{
-					"message": err.Error(),
-				})
-				return
-			}
+	for _, recipientDetail := range travelDeliveryInput.RecipientDetail {
+		deliveryOrderRecipientDetail := models.DeliveryOrderRecipientDetail{
+			TransactionDeliveryID: recipientDetail.TransactionDeliveryID,
+			DeliveryOrderID:       deliveryOrder.ID,
+			Quantity:              recipientDetail.Quantity,
+			ProvinceId:            recipientDetail.ProvinceId,
+			CityId:                recipientDetail.CityId,
+			OilId:                 travelDeliveryInput.OilId,
 		}
-	}()
 
-	go func() {
-		for _, warehouseDetail := range travelDeliveryInput.WarehouseDetail {
-			deliveryOrderWarehouseDetail := models.DeliveryOrderWarehouseDetail{
-				DeliveryOrderID: deliveryOrder.ID,
-				WarehouseID:     warehouseDetail.WarehouseID,
-				Quantity:        warehouseDetail.Quantity,
-				StorageID:       warehouseDetail.StorageID,
-			}
-
-			if err := config.DB.Create(&deliveryOrderWarehouseDetail).Error; err != nil {
-				c.JSON(400, gin.H{
-					"message": err.Error(),
-				})
-				return
-			}
+		if err := config.DB.Create(&deliveryOrderRecipientDetail).Error; err != nil {
+			c.JSON(400, gin.H{
+				"message": err.Error(),
+			})
+			return
 		}
-	}()
+	}
+
+	//for _, warehouseDetail := range travelDeliveryInput.WarehouseDetail {
+	//	deliveryOrderWarehouseDetail := models.DeliveryOrderWarehouseDetail{
+	//		DeliveryOrderID: deliveryOrder.ID,
+	//		WarehouseID:     warehouseDetail.WarehouseID,
+	//		Quantity:        warehouseDetail.Quantity,
+	//		StorageID:       warehouseDetail.StorageID,
+	//	}
+	//
+	//	if err := config.DB.Create(&deliveryOrderWarehouseDetail).Error; err != nil {
+	//		c.JSON(400, gin.H{
+	//			"message": err.Error(),
+	//		})
+	//		return
+	//	}
+	//}
 
 	c.JSON(200, gin.H{
 		"message": "Success create travel order",
@@ -269,29 +219,6 @@ func UpdateBatchStatus(c *gin.Context) {
 			"message": "Travel order not found",
 		})
 		return
-	}
-
-	for _, travel := range travelOrder {
-		for _, deliveryOrder := range travel.DeliveryOrderRecipientDetail {
-			transactionId := deliveryOrder.TransactionID
-			var internalTransaction models.Transaction
-			if err := config.DB.Where("id = ?", transactionId).First(&internalTransaction).Error; err != nil {
-				c.JSON(400, gin.H{
-					"message": "Transaction not found",
-				})
-				return
-			}
-
-			internalTransaction.StatusId = 8
-
-			if err := config.DB.Save(&internalTransaction).Error; err != nil {
-				c.JSON(400, gin.H{
-					"message": "Failed to update transaction",
-				})
-				return
-			}
-
-		}
 	}
 
 	c.JSON(200, gin.H{

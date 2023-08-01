@@ -177,6 +177,29 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
+	if transaction.StatusId == 3 {
+		if totalQuantityMFO > 0 {
+
+			totalPengirimanMFO := totalQuantityMFO / 8000
+
+			for i := 0; i < totalPengirimanMFO; i++ {
+				transactionDelivery := models.TransactionDelivery{
+					TransactionID:  int64(transaction.ID),
+					DeliveryStatus: "pending",
+					Quantity:       8000,
+				}
+
+				if err := config.DB.Create(&transactionDelivery).Error; err != nil {
+					c.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+			}
+
+		}
+	}
+
 	c.JSON(200, gin.H{
 		"message": "success create transaction",
 	})
