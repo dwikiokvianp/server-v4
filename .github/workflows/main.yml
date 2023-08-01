@@ -39,7 +39,7 @@ jobs:
           username: ${{secrets.MAIL_USERNAME}}
           password: ${{secrets.MAIL_PASSWORD}}
           subject: Github Actions job result
-          to: dwikiokvianp1999@gmail.com, dwikiokvian1412@gmail.com, ilhamprastiyo678@gmail.com
+          to: dwikiokvianp1999@gmail.com, dwikiokvian1412@gmail.com, ilhamprastiyo678@gmail.com, ilhamprastiyi345@gmail.com
           from: Luke Skywalker
           body: |
             A user with the following email address has just triggered a build:
