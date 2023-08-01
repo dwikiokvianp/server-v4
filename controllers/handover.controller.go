@@ -60,7 +60,7 @@ func CreateHandover(c *gin.Context) {
 
 	id := c.MustGet("id").(string)
 	idInt, _ := strconv.Atoi(id)
-	handover.OfficerId = idInt
+	handover.EmployeeId = idInt
 
 	fileTangki, err := c.FormFile("handover_tangki")
 	if err != nil {
@@ -165,7 +165,7 @@ func GetHandoverById(c *gin.Context) {
 		Where("officer_id = ?", idInt).
 		Preload("WorkerBefore").
 		Preload("WorkerAfter").
-		Joins("Officer").
+		Joins("Employee").
 		Order("id desc").
 		First(&handover).Error; err != nil {
 		c.JSON(500, gin.H{

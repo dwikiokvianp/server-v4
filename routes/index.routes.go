@@ -21,6 +21,7 @@ func Routes(c *gin.Engine) {
 	HistoryRoutes(c)
 	OfficerRoutes(c)
 	TransactionDetail(c)
+	UpdateTransactionRoutes(c)
 	OilRoutes(c)
 	SummaryRoutes(c)
 	TravelDeliveryRoutes(c)

@@ -387,7 +387,7 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	pdf.SetTextColor(0, 0, 0)
 
 	// Gabungkan tabel header dengan data minyak
-	header := []string{"ID", "Name", "Storage ID, Quantity"}
+	header := []string{"ID", "Name", "Storage ID"}
 
 	for i, colName := range header {
 		x := 10.0 + float64(i)*cellWidth
