@@ -53,7 +53,8 @@ func CreateHandover(c *gin.Context) {
 	var handover models.Handover
 
 	// Bind data from form-data
-	handover.WorkerBeforeId, _ = strconv.Atoi(c.PostForm("worker_before_id"))
+	workerBeforeID, _ := strconv.Atoi(c.MustGet("worker_before_id").(string))
+    handover.WorkerBeforeId = workerBeforeID
 	handover.WorkerAfterId, _ = strconv.Atoi(c.PostForm("worker_after_id"))
 	handover.Condition = c.PostForm("condition")
 	handover.Status = "pending" 
