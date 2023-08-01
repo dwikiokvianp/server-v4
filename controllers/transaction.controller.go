@@ -177,60 +177,6 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	if inputTransaction.StatusId == 3 {
-		kelipatan := 8000
-		if totalQuantityMFO > 0 {
-			totalTravel := totalQuantityMFO / kelipatan
-
-			for i := 0; i < totalTravel; i++ {
-				travelOrder := models.TravelOrder{
-					DriverId:  1,
-					Status:    "created",
-					OfficerId: 1,
-					VehicleId: 1,
-				}
-
-				if err := config.DB.Create(&travelOrder).Error; err != nil {
-					c.JSON(500, gin.H{
-						"error": err.Error(),
-					})
-					return
-				}
-				deliveryOrder := models.DeliveryOrder{
-					TravelOrderID: travelOrder.ID,
-					OilId:         1,
-				}
-
-				fmt.Println("index", i)
-
-				if err := config.DB.Create(&deliveryOrder).Error; err != nil {
-					c.JSON(500, gin.H{
-						"error": err.Error(),
-					})
-					return
-				}
-
-				recipient := models.DeliveryOrderRecipientDetail{
-					DeliveryOrderID:   deliveryOrder.ID,
-					TransactionID:     int64(transaction.ID),
-					DeliveredQuantity: 10000,
-					OilId:             1,
-					Quantity:          8000,
-					ProvinceId:        2,
-					CityId:            2,
-				}
-
-				if err := config.DB.Create(&recipient).Error; err != nil {
-					c.JSON(500, gin.H{
-						"error": err.Error(),
-					})
-					return
-				}
-
-			}
-		}
-	}
-
 	c.JSON(200, gin.H{
 		"message": "success create transaction",
 	})
