@@ -12,6 +12,26 @@ import (
 	"time"
 )
 
+func GetTransactionDelivery(c *gin.Context) {
+
+	var transactionDelivery []models.TransactionDelivery
+
+	id := c.Param("id")
+
+	if err := config.DB.
+		Where("transaction_id = ?", id).
+		Preload("Transaction").
+		Find(&transactionDelivery).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": transactionDelivery,
+	})
+
+}
+
 func CreateTransactions(c *gin.Context) {
 
 	var inputTransaction models.TransactionInput
