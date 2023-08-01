@@ -5,5 +5,4 @@ type TransactionDelivery struct {
 	TransactionID  int64       `json:"transaction_id"`
 	Transaction    Transaction `gorm:"foreignkey:TransactionID"`
 	DeliveryStatus string      `json:"delivery_status"`
-	Quantity       int64       `json:"quantity"`
 }

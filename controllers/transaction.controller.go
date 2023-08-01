@@ -186,7 +186,6 @@ func CreateTransactions(c *gin.Context) {
 				transactionDelivery := models.TransactionDelivery{
 					TransactionID:  int64(transaction.ID),
 					DeliveryStatus: "pending",
-					Quantity:       8000,
 				}
 
 				if err := config.DB.Create(&transactionDelivery).Error; err != nil {
