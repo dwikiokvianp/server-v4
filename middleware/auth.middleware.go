@@ -39,10 +39,8 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		userID := claims["id"]
-		workerBeforeID := claims["worker_before_id"]
 
 		c.Set("id", userID)
-		c.Set("worker_before_id", workerBeforeID)
 
 		c.Next()
 	}
