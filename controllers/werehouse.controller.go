@@ -41,7 +41,6 @@ func GetStorageWarehouse(c *gin.Context) {
 	var storageWarehouse []models.Storage
 
 	if err := config.DB.
-		Where("warehouse_detail_id = ?", c.Param("id")).
 		Find(&storageWarehouse).Error; err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
