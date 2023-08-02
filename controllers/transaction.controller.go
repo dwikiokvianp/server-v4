@@ -220,9 +220,7 @@ func CreateTransactions(c *gin.Context) {
 
 	if transaction.StatusId == 3 {
 		if totalQuantityMFO > 0 {
-
 			totalPengirimanMFO := totalQuantityMFO / 8000
-
 			for i := 0; i < totalPengirimanMFO; i++ {
 				transactionDelivery := models.TransactionDelivery{
 					TransactionID:  int64(transaction.ID),

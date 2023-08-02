@@ -8,6 +8,7 @@ import (
 func Routes(c *gin.Engine) {
 	AuthRoutes(c)
 	c.Use(middleware.AuthMiddleware())
+	DashboardRoutes(c)
 	UserRoutes(c)
 	StatusRoutes(c)
 	EmployeeRoutes(c)
