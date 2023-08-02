@@ -287,7 +287,7 @@ func GetTransactionDeliveryActive(c *gin.Context) {
 	fmt.Println("typeTransactionQuery", typeTransactionQuery, "halo")
 
 	err := db.Offset(offset).Limit(pageSize).
-		Where("status_id BETWEEN 3 AND 4").
+		Where("status_id BETWEEN 3 AND 4 OR status_id = 7").
 		Where("is_finished = ?", false).
 		Preload("Customer.User").
 		Preload("Customer.Company").

@@ -142,8 +142,8 @@ func GenerateCustomerType() {
 }
 
 func GenerateFakeUsers(count int) {
+	fake := faker.New()
 	for i := 0; i < count; i++ {
-		fake := faker.New()
 		detail := GenerateFakeDetail()
 		err := config.DB.Create(&detail).Error
 		if err != nil {
@@ -263,9 +263,9 @@ func generateFakeCompany(num int) {
 	}
 }
 
-func generateFakeCustomer(num, roleInput int) {
-	for i := 0; i < num; i++ {
-		fake := faker.New()
+func generateFakeCustomer(num int) {
+	fake := faker.New()
+	for i := 0; i < num/2; i++ {
 		detail := GenerateFakeDetail()
 
 		errCreateDetail := config.DB.Create(&detail).Error
@@ -285,7 +285,37 @@ func generateFakeCustomer(num, roleInput int) {
 		}
 		customer := models.Customer{
 			UserId:         user.Id,
-			CustomerTypeId: roleInput,
+			CustomerTypeId: 1,
+			DetailId:       detail.Id,
+			CompanyID:      2,
+			Phone:          fake.Phone().Number(),
+		}
+		errCreateCustomer := config.DB.Create(&customer).Error
+		if err != nil {
+			fmt.Println(errCreateCustomer)
+		}
+	}
+	for i := 0; i < num/2; i++ {
+		detail := GenerateFakeDetail()
+
+		errCreateDetail := config.DB.Create(&detail).Error
+		if errCreateDetail != nil {
+			fmt.Println(errCreateDetail)
+		}
+
+		user := models.User{
+			Username: fake.Person().Name(),
+			Password: fake.Internet().Password(),
+			Email:    fake.Internet().Email(),
+		}
+
+		err := config.DB.Create(&user).Error
+		if err != nil {
+			fmt.Println(err)
+		}
+		customer := models.Customer{
+			UserId:         user.Id,
+			CustomerTypeId: 2,
 			DetailId:       detail.Id,
 			CompanyID:      2,
 			Phone:          fake.Phone().Number(),
@@ -373,9 +403,6 @@ func main() {
 	GenerateVehicleType(vehicleTypes)
 
 	generateFakeCompany(10)
-
-	generateFakeCustomer(10, 1)
-	generateFakeCustomer(10, 2)
 	oils := []string{"HSD", "MFO"}
 	warehouse := []string{"Jetty", "SPOB"}
 	GenerateOil(oils, warehouse)
@@ -384,6 +411,7 @@ func main() {
 	generateVehicle(2, 2)
 
 	GenerateFakeUsers(5)
+	generateFakeCustomer(20)
 	generateSomeUser(User{
 		Username: "admin",
 		Password: "admin",
