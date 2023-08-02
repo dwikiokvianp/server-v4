@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func GenerateJWT(email, role, id string) (string, error) {
+func GenerateJWT(email, role string, id int) (string, error) {
 	var mySigningKey = []byte(os.Getenv("SECRET_KEY"))
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)

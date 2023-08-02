@@ -160,7 +160,8 @@ func GetTravelOrderByUser(c *gin.Context) {
 	var travelOrder []models.TravelOrder
 
 	userId := c.MustGet("id")
-	fmt.Println("driver_id", userId)
+
+	fmt.Print(userId)
 
 	if err := config.DB.Where("driver_id = ?", userId).
 		Find(&travelOrder).Error; err != nil {
@@ -187,11 +188,11 @@ func GetTravelOrderById(c *gin.Context) {
 	var travelOrder models.TravelOrder
 	if err := config.DB.Where("id = ?", id).
 		Preload("Driver.User").
-		Preload("DeliveryOrderRecipientDetail.Transaction.Customer.User").
-		Preload("DeliveryOrderRecipientDetail.Transaction.Customer.Company").
-		Preload("DeliveryOrderRecipientDetail.Transaction.Vehicle").
-		Preload("DeliveryOrderRecipientDetail.Transaction.Status.Status").
-		Preload("DeliveryOrderRecipientDetail.Transaction.TransactionDetail.Oil").
+		Preload("Vehicle.VehicleIdentifier").
+		Preload("Vehicle.VehicleType").
+		Preload("DeliveryOrderRecipientDetail.DeliveryOrder").
+		Preload("DeliveryOrderRecipientDetail.TransactionDelivery.Transaction.Customer.User").
+		Preload("DeliveryOrderRecipientDetail.TransactionDelivery.Transaction.Customer.Company").
 		First(&travelOrder).Error; err != nil {
 		c.JSON(400, gin.H{
 			"message": "Travel order not found",

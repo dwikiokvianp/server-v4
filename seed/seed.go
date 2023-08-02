@@ -130,7 +130,7 @@ func GenerateVehicleType(vehicleTypes []string) {
 }
 
 func GenerateCustomerType() {
-	for _, customerType := range []string{"Retail", "Corporate"} {
+	for _, customerType := range []string{"Internal", "Pertamina"} {
 		customerType := models.CustomerType{
 			Name: customerType,
 		}

@@ -5,7 +5,6 @@ import (
 	"server-v2/config"
 	"server-v2/models"
 	"server-v2/utils"
-	"strconv"
 )
 
 func RegisterUser(c *gin.Context) {
@@ -85,14 +84,12 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	id := strconv.Itoa(user.Id)
-
 	employee := models.Employee{}
 	if err := config.DB.
 		Where("user_id = ?", user.Id).
 		Preload("Role").
 		First(&employee).Error; err == nil {
-		token, err := utils.GenerateJWT(user.Email, employee.Role.Role, id)
+		token, err := utils.GenerateJWT(user.Email, employee.Role.Role, employee.Id)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return

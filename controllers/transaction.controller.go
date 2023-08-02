@@ -20,8 +20,33 @@ func GetTransactionDelivery(c *gin.Context) {
 
 	if err := config.DB.
 		Where("transaction_id = ?", id).
-		Preload("Transaction").
+		Preload("Transaction.Customer.User").
+		Preload("Transaction.Customer.Company").
+		Preload("Transaction.TransactionDetail").
+		Preload("Transaction.Vehicle.VehicleType").
 		Find(&transactionDelivery).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": transactionDelivery,
+	})
+
+}
+func GetTransactionDeliveryById(c *gin.Context) {
+
+	var transactionDelivery models.TransactionDelivery
+
+	id := c.Param("id")
+
+	if err := config.DB.
+		Where("id = ?", id).
+		Preload("Transaction.Customer.User").
+		Preload("Transaction.Customer.Company").
+		Preload("Transaction.TransactionDetail.Oil").
+		Preload("Transaction.Vehicle.VehicleType").
+		First(&transactionDelivery).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -61,8 +86,6 @@ func CreateTransactions(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("user id", intUserId)
-
 	transaction := models.Transaction{
 		CustomerId: intUserId,
 		Email:      user.Email,
@@ -72,8 +95,6 @@ func CreateTransactions(c *gin.Context) {
 		ProvinceId: inputTransaction.ProvinceId,
 		StatusId:   inputTransaction.StatusId,
 	}
-
-	fmt.Println("status", inputTransaction.StatusId)
 
 	if err := config.DB.Create(&transaction).Error; err != nil {
 		c.JSON(500, gin.H{
@@ -206,6 +227,7 @@ func CreateTransactions(c *gin.Context) {
 				transactionDelivery := models.TransactionDelivery{
 					TransactionID:  int64(transaction.ID),
 					DeliveryStatus: "pending",
+					Quantity:       8000,
 				}
 
 				if err := config.DB.Create(&transactionDelivery).Error; err != nil {
@@ -221,6 +243,75 @@ func CreateTransactions(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "success create transaction",
+	})
+}
+func GetTransactionDeliveryActive(c *gin.Context) {
+	var (
+		transactions []models.Transaction
+		pageSize     = 10
+		page         = 1
+		statusId     = 1
+	)
+
+	pageParam := c.Query("page")
+	if pageParam != "" {
+		page, _ = strconv.Atoi(pageParam)
+	}
+
+	typeTransactionQuery := c.Query("type")
+
+	statusIdParam := c.Query("status")
+	statusIdParamInt, _ := strconv.Atoi(statusIdParam)
+	if statusIdParamInt != 0 {
+		statusId = statusIdParamInt
+	}
+
+	limitParam := c.Query("limit")
+	if limitParam != "" {
+		pageSize, _ = strconv.Atoi(limitParam)
+	}
+
+	db := config.DB
+
+	var count int64
+	if err := db.Model(&models.Transaction{}).
+		Count(&count).
+		Error; err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	offset := (page - 1) * pageSize
+	fmt.Println(statusId)
+
+	fmt.Println("typeTransactionQuery", typeTransactionQuery, "halo")
+
+	err := db.Offset(offset).Limit(pageSize).
+		Where("status_id BETWEEN 3 AND 4").
+		Where("is_finished = ?", false).
+		Preload("Customer.User").
+		Preload("Customer.Company").
+		Preload("Vehicle.VehicleType").
+		Preload("Officer").
+		Preload("Province").
+		Preload("City").
+		Preload("Status.StatusType").
+		Preload("Status.Status").
+		Preload("TransactionDetail.Oil").
+		Order("updated_at desc").
+		Find(&transactions).Error
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	totalPages := (int(count) + pageSize - 1) / pageSize
+
+	c.JSON(200, gin.H{
+		"data":     transactions,
+		"page":     page,
+		"pageSize": pageSize,
+		"total":    totalPages,
 	})
 }
 
@@ -262,7 +353,6 @@ func GetAllTransactions(c *gin.Context) {
 	}
 
 	offset := (page - 1) * pageSize
-	fmt.Println(statusId)
 
 	fmt.Println("typeTransactionQuery", typeTransactionQuery, "halo")
 
@@ -358,9 +448,10 @@ func GetUserTransaction(c *gin.Context) {
 
 func UpdateTransactionBatch(c *gin.Context) {
 	type IdToUpdate struct {
-		Id        uint64 `json:"id"`
-		VehicleId *int   `json:"vehicle_id"`
-		DriverId  int    `json:"driver_id"`
+		Id                    uint64 `json:"id"`
+		TransactionDeliveryId int    `json:"transaction_delivery_id"`
+		VehicleId             *int   `json:"vehicle_id"`
+		DriverId              int    `json:"driver_id"`
 	}
 
 	var ids []IdToUpdate
@@ -373,6 +464,25 @@ func UpdateTransactionBatch(c *gin.Context) {
 
 	for _, id := range ids {
 		transaction := models.Transaction{}
+
+		transactionDelivery := models.TransactionDelivery{}
+
+		if err := config.DB.Find(&transactionDelivery, id.TransactionDeliveryId).Error; err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		transactionDelivery.DeliveryStatus = "On Delivery"
+
+		if err := config.DB.Save(&transactionDelivery).Error; err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
 		if err := config.DB.Find(&transaction, id.Id).Error; err != nil {
 			c.JSON(400, gin.H{
 				"error": err.Error(),
@@ -407,6 +517,7 @@ func UpdateTransactionBatch(c *gin.Context) {
 			c.JSON(400, gin.H{
 				"error": err.Error(),
 			})
+			fmt.Println(err.Error())
 			return
 		}
 	}

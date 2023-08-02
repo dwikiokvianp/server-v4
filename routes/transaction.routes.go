@@ -12,8 +12,10 @@ func TransactionRoutes(router *gin.Engine) {
 	transactionGroup := router.Group("/transactions")
 	{
 		transactionGroup.POST("/:id", controllers.CreateTransactions)
+		transactionGroup.GET("/active", controllers.GetTransactionDeliveryActive)
 		transactionGroup.GET("", controllers.GetAllTransactions)
 		transactionGroup.GET("/delivery/:id", controllers.GetTransactionDelivery)
+		transactionGroup.GET("/delivery/detail/:id", controllers.GetTransactionDeliveryById)
 		transactionGroup.GET("/:id", controllers.GetByIdTransaction)
 		transactionGroup.PATCH("", controllers.UpdateTransactionBatch)
 		transactionGroup.PATCH("/:id", controllers.UpdateTransaction)

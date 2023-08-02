@@ -146,7 +146,6 @@ func GetUserById(c *gin.Context) {
 	err := config.DB.Where("users.id = ?", id).
 		Select("username", "email", "phone", "detail_id", "company_id").
 		Joins("Detail").
-		Joins("Company").
 		First(&user).Error
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
