@@ -9,6 +9,7 @@ import (
 	"server-v2/models"
 	"server-v2/utils"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -399,12 +400,12 @@ func GetAllTransactions(c *gin.Context) {
 }
 
 func GetUserTransaction(c *gin.Context) {
-
 	userId := c.Query("user_id")
 	dateQuery := c.Query("date")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	customerTypeId, _ := strconv.Atoi(c.DefaultQuery("customer_type_id", "1"))
+	search := strings.ToLower(c.DefaultQuery("search", ""))
 
 	dateNow := time.Now()
 	var fromDate time.Time
@@ -422,8 +423,10 @@ func GetUserTransaction(c *gin.Context) {
 
 	dbQuery := config.DB.
 		Joins("JOIN customers ON customers.id = transactions.customer_id").
+		Joins("JOIN users ON customers.user_id = users.id").
 		Where("date >= ?", fromDate.Format("2006-01-02")).
 		Where("customers.customer_type_id = ?", customerTypeId).
+		Where("LOWER(users.username) LIKE ?", "%"+search+"%").
 		Preload("Customer.User").
 		Preload("Customer.Company").
 		Preload("TransactionDetail").
