@@ -208,23 +208,6 @@ func CreateProof(c *gin.Context) {
 
 	fmt.Println(transaction.TransactionDetail)
 
-	for _, item := range transaction.TransactionDetail {
-		historyOut := models.HistoryOut{
-			Date:          time.Now(),
-			TransactionId: transactionIdInt,
-			Quantity:      int(item.Quantity),
-			OilId:         int(item.OilID),
-		}
-
-		if err := config.DB.Create(&historyOut).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to save history to database",
-			})
-			return
-		}
-	}
-
-	// Generate the invoice PDF with the signature
 	invoicePDF, err := GenerateInvoicePDF(*proof, transaction, company, signaturePath, oils)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -318,7 +301,7 @@ func GenerateInvoicePDF(proof models.Proof, transaction models.Transaction, comp
 	pdf.SetAuthor("Your Company", true)
 	pdf.AddPage()
 
-   	// // Sisipkan garis pembatas
+	// // Sisipkan garis pembatas
 	// pdf.SetLineWidth(0.5)
 	// pdf.Line(10, 35, 200, 35)
 
