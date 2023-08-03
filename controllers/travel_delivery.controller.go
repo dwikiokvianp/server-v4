@@ -31,6 +31,7 @@ func CreateTravelOrder(c *gin.Context) {
 		return
 	}
 
+	fmt.Println(travelDeliveryInput.DepartureDate)
 	travelOrder := models.TravelOrder{
 		DriverId:       travelDeliveryInput.DriverId,
 		PickupLocation: travelDeliveryInput.PickupLocation,
@@ -78,22 +79,6 @@ func CreateTravelOrder(c *gin.Context) {
 			return
 		}
 	}
-
-	//for _, warehouseDetail := range travelDeliveryInput.WarehouseDetail {
-	//	deliveryOrderWarehouseDetail := models.DeliveryOrderWarehouseDetail{
-	//		DeliveryOrderID: deliveryOrder.ID,
-	//		WarehouseID:     warehouseDetail.WarehouseID,
-	//		Quantity:        warehouseDetail.Quantity,
-	//		StorageID:       warehouseDetail.StorageID,
-	//	}
-	//
-	//	if err := config.DB.Create(&deliveryOrderWarehouseDetail).Error; err != nil {
-	//		c.JSON(400, gin.H{
-	//			"message": err.Error(),
-	//		})
-	//		return
-	//	}
-	//}
 
 	c.JSON(200, gin.H{
 		"message": "Success create travel order",

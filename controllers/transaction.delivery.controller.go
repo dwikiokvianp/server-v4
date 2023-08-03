@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -39,7 +40,37 @@ func UpdateTransactionDelivery(c *gin.Context) {
 		return
 	}
 
-	
+	go func() {
+		transactionId := delivery.TransactionID
+		fmt.Println(transactionId, "ini transaction id")
+		var transaction models.Transaction
+
+		if err := config.DB.First(&transaction, transactionId).Error; err != nil {
+			return
+		}
+
+		var transactionDeliveries []models.TransactionDelivery
+		if err := config.DB.Where("transaction_id = ?", transactionId).Find(&transactionDeliveries).Error; err != nil {
+			return
+		}
+
+		counterDelivery := 0
+		for _, transactionDelivery := range transactionDeliveries {
+			if transactionDelivery.DeliveryStatus != "pending" {
+				counterDelivery++
+				return
+			} else {
+				return
+			}
+		}
+
+		if counterDelivery == len(transactionDeliveries) {
+			transaction.IsFinished = true
+			config.DB.Save(&transaction)
+		}
+
+	}()
+
 	c.JSON(200, gin.H{
 		"message": "success update status",
 	})

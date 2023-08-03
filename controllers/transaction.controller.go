@@ -236,6 +236,22 @@ func CreateTransactions(c *gin.Context) {
 				}
 			}
 
+		} else if totalQuantityHSD > 0 {
+			totalPengirimanHSD := totalQuantityHSD / 8000
+			for i := 0; i < totalPengirimanHSD; i++ {
+				transactionDelivery := models.TransactionDelivery{
+					TransactionID:  int64(transaction.ID),
+					DeliveryStatus: "pending",
+					Quantity:       8000,
+				}
+
+				if err := config.DB.Create(&transactionDelivery).Error; err != nil {
+					c.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+			}
 		}
 	}
 
