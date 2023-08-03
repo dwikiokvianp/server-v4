@@ -404,6 +404,7 @@ func GetUserTransaction(c *gin.Context) {
 	dateQuery := c.Query("date")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	customerTypeId, _ := strconv.Atoi(c.DefaultQuery("customer_type_id", "1"))
 
 	dateNow := time.Now()
 	var fromDate time.Time
@@ -420,7 +421,9 @@ func GetUserTransaction(c *gin.Context) {
 	}
 
 	dbQuery := config.DB.
+		Joins("JOIN customers ON customers.id = transactions.customer_id").
 		Where("date >= ?", fromDate.Format("2006-01-02")).
+		Where("customers.customer_type_id = ?", customerTypeId).
 		Preload("Customer.User").
 		Preload("Customer.Company").
 		Preload("TransactionDetail").
