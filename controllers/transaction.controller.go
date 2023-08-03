@@ -343,7 +343,7 @@ func GetAllTransactions(c *gin.Context) {
 		page, _ = strconv.Atoi(pageParam)
 	}
 
-	typeTransactionQuery := c.Query("type")
+	typeTransactionQuery := strings.ToLower(c.Query("search"))
 
 	statusIdParam := c.Query("status")
 	statusIdParamInt, _ := strconv.Atoi(statusIdParam)
@@ -355,6 +355,7 @@ func GetAllTransactions(c *gin.Context) {
 	if limitParam != "" {
 		pageSize, _ = strconv.Atoi(limitParam)
 	}
+	fmt.Println("typeTransactionQuery", typeTransactionQuery, "halo")
 
 	db := config.DB
 
@@ -369,10 +370,11 @@ func GetAllTransactions(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
-	fmt.Println("typeTransactionQuery", typeTransactionQuery, "halo")
-
 	err := db.Offset(offset).Limit(pageSize).
 		Where("status_id = ?", statusId).
+		Joins("JOIN customers ON customers.id = transactions.customer_id").
+		Joins("JOIN users ON customers.user_id = users.id").
+		Where("LOWER(users.username) LIKE ?", "%"+typeTransactionQuery+"%").
 		Preload("Customer.User").
 		Preload("Customer.Company").
 		Preload("Vehicle.VehicleType").
