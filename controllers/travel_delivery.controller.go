@@ -90,6 +90,7 @@ func GetTravelOrder(c *gin.Context) {
 	var travelOrder []models.TravelOrder
 	page := c.DefaultQuery("page", "1")
 	limit := c.DefaultQuery("limit", "10")
+	search := c.DefaultQuery("search", "")
 
 	pageInt, err := strconv.Atoi(page)
 	if err != nil || pageInt < 1 {
@@ -109,20 +110,32 @@ func GetTravelOrder(c *gin.Context) {
 
 	offset := (pageInt - 1) * limitInt
 
+	var employeeIDs []int
+	if err := config.DB.Model(&models.Employee{}).
+		Joins("JOIN users ON employees.user_id = users.id").
+		Where("users.username LIKE ?", "%"+search+"%").
+		Pluck("employees.id", &employeeIDs).Error; err != nil {
+		c.JSON(400, gin.H{
+			"message": "Failed to get employee IDs",
+		})
+		return
+	}
+
 	var totalRecords int64
-	if err := config.DB.Model(&models.TravelOrder{}).Count(&totalRecords).Error; err != nil {
+	if err := config.DB.Model(&models.TravelOrder{}).
+		Where("driver_id IN ?", employeeIDs).
+		Count(&totalRecords).Error; err != nil {
 		c.JSON(400, gin.H{
 			"message": "Failed to get total record count",
 		})
 		return
 	}
 
-	totalPage := int(math.Ceil(float64(totalRecords) / float64(limitInt)))
-
 	if err := config.DB.
 		Preload("Driver.User").
 		Preload("Vehicle.VehicleIdentifier").
 		Preload("Vehicle.VehicleType").
+		Where("driver_id IN ?", employeeIDs).
 		Offset(offset).
 		Limit(limitInt).
 		Find(&travelOrder).Error; err != nil {
@@ -131,6 +144,8 @@ func GetTravelOrder(c *gin.Context) {
 		})
 		return
 	}
+
+	totalPage := int(math.Ceil(float64(totalRecords) / float64(limitInt)))
 
 	c.JSON(200, gin.H{
 		"data":        travelOrder,

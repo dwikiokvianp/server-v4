@@ -381,7 +381,7 @@ func GetAllTransactions(c *gin.Context) {
 		Preload("Status.StatusType").
 		Preload("Status.Status").
 		Preload("TransactionDetail.Oil").
-		Order("updated_at desc").
+		Order("date asc").
 		Find(&transactions).Error
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -428,7 +428,7 @@ func GetUserTransaction(c *gin.Context) {
 		Preload("Customer.Company").
 		Preload("TransactionDetail").
 		Preload("Status.StatusType").
-		Order("date desc")
+		Order("date asc")
 
 	if userId != "" {
 		dbQuery = dbQuery.Where("customer_id = ?", userId)
@@ -528,6 +528,56 @@ func UpdateTransactionBatch(c *gin.Context) {
 			if statusInt == 4 {
 				transaction.StatusId = 7
 			}
+		}
+
+		if err := config.DB.Save(&transaction).Error; err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+			fmt.Println(err.Error())
+			return
+		}
+	}
+	for _, id := range ids {
+		transactionDeliveryId := id.TransactionDeliveryId
+		transactionDelivery := models.TransactionDelivery{}
+
+		if err := config.DB.Find(&transactionDelivery, transactionDeliveryId).Error; err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		transactionId := transactionDelivery.TransactionID
+
+		transaction := models.Transaction{}
+
+		if err := config.DB.Find(&transaction, transactionId).Error; err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		var transactionDeliveryBatch []models.TransactionDelivery
+
+		if err := config.DB.Where("transaction_id = ?", transactionId).Find(&transactionDeliveryBatch).Error; err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		counterPending := 0
+		for _, transactionDelivery := range transactionDeliveryBatch {
+			if transactionDelivery.DeliveryStatus == "pending" {
+				counterPending++
+			}
+		}
+
+		if counterPending == 0 {
+			transaction.IsFinished = true
 		}
 
 		if err := config.DB.Save(&transaction).Error; err != nil {

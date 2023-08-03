@@ -190,39 +190,38 @@ func GenerateOil(oils, warehouse []string) {
 			fmt.Println(err)
 		}
 
-		for _, oil := range oils {
+	}
+	for _, oil := range oils {
 
-			storage := models.Storage{
-				Name:        fmt.Sprintf("%s Storage", oil),
-				Quantity:    80_000,
-				WarehouseID: wareHouse.Id,
-				Capacity:    1000_000,
-				OilID:       1,
-			}
+		storage := models.Storage{
+			Name:        fmt.Sprintf("%s Storage", oil),
+			Quantity:    80_000,
+			WarehouseID: 1,
+			Capacity:    1000_000,
+			OilID:       1,
+		}
 
-			err := config.DB.Create(&storage).Error
-			if err != nil {
-				fmt.Println(err)
-			}
+		err := config.DB.Create(&storage).Error
+		if err != nil {
+			fmt.Println(err)
+		}
 
-			oil := models.Oil{
-				Name:      oil,
-				StorageId: int(storage.ID),
-			}
+		oil := models.Oil{
+			Name:      oil,
+			StorageId: int(storage.ID),
+		}
 
-			err = config.DB.Create(&oil).Error
-			if err != nil {
-				fmt.Println(err)
-			}
+		err = config.DB.Create(&oil).Error
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 
 }
 
 func generateVehicle(num, vehicleType int) {
+	fake := faker.New()
 	for i := 0; i < num; i++ {
-		fake := faker.New()
-
 		identifier := models.VehicleIdentifier{
 			Identifier: fake.RandomLetter(),
 		}
@@ -233,7 +232,7 @@ func generateVehicle(num, vehicleType int) {
 		}
 		vehicle := models.Vehicle{
 			Name:                fake.Car().Model(),
-			VehicleTypeId:       1,
+			VehicleTypeId:       vehicleType,
 			VehicleIdentifierId: identifier.Id,
 		}
 
@@ -241,7 +240,6 @@ func generateVehicle(num, vehicleType int) {
 		if err != nil {
 			fmt.Println(err)
 		}
-
 	}
 }
 
@@ -304,7 +302,7 @@ func generateFakeCustomer(num int) {
 		}
 
 		user := models.User{
-			Username: fake.Person().Name(),
+			Username: fmt.Sprintf("Pertamina %v", fake.Person().Name()),
 			Password: fake.Internet().Password(),
 			Email:    fake.Internet().Email(),
 		}
@@ -317,7 +315,7 @@ func generateFakeCustomer(num int) {
 			UserId:         user.Id,
 			CustomerTypeId: 2,
 			DetailId:       detail.Id,
-			CompanyID:      2,
+			CompanyID:      fake.IntBetween(1, 10),
 			Phone:          fake.Phone().Number(),
 		}
 		errCreateCustomer := config.DB.Create(&customer).Error
