@@ -806,71 +806,220 @@ func UpdateTransactionType(c *gin.Context) {
 }
 
 func UpdateStatusTransactions(c *gin.Context) {
-	transaction := models.Transaction{}
-
 	id := c.Param("id")
-	err := config.DB.Find(&transaction, id).Error
-	if err != nil {
-		c.JSON(400, gin.H{
-			"error": err.Error(),
-		})
+
+	var transaction models.Transaction
+	if err := config.DB.First(&transaction, id).Error; err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
 	if transaction.ID == 0 {
-		c.JSON(404, gin.H{
-			"message": "Transaction Not Found",
-		})
-		return
-	}
-
-	status := c.Query("status")
-	if status == "" {
-		c.JSON(400, gin.H{
-			"message": "Status is required",
-		})
+		c.JSON(404, gin.H{"message": "Transaction Not Found"})
 		return
 	}
 
 	statusQuery := c.Query("status")
 	if statusQuery == "" {
-		c.JSON(400, gin.H{
-			"message": "Status is required",
-		})
+		c.JSON(400, gin.H{"message": "Status is required"})
 		return
 	}
 
 	statusInt, err := strconv.Atoi(statusQuery)
 	if err != nil {
-		c.JSON(400, gin.H{
-			"message": "Status must be integer",
-		})
+		c.JSON(400, gin.H{"message": "Status must be an integer"})
 		return
 	}
 
 	now := time.Now().Format("2006-01-02")
 	transactionDate := transaction.Date.Format("2006-01-02")
 
-	if transactionDate == now {
-		if statusInt == 5 {
-			transaction.StatusId = 6
-		} else {
-			transaction.StatusId = statusInt
+	if transactionDate == now && statusInt == 5 {
+		transaction.StatusId = 6
+		qrData := strconv.Itoa(int(transaction.ID))
+		qrFile, err := utils.GenerateQRCode(qrData)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
 		}
+
+		key := fmt.Sprintf("qrcodes/%v.png", transaction.ID)
+		qrURL, err := utils.UploadToS3(qrFile, key)
+		if err != nil {
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		customer := models.Customer{}
+		config.DB.Where("id = ?", transaction.CustomerId).
+			Preload("User").
+			First(&customer)
+
+		email := customer.User.Email
+		subject := "QR Code Transaction"
+		body := `
+	<html>
+	<head>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				background-color: #f2f2f2;
+				padding: 20px;
+			}
+	
+			h1 {
+				color: #333333;
+				font-size: 24px;
+				font-weight: bold;
+				margin-bottom: 20px;
+			}
+	
+			p {
+				color: #666666;
+				font-size: 16px;
+				line-height: 1.5;
+				margin-bottom: 10px;
+			}
+	
+			.qr-code {
+				display: block;
+				text-align: center;
+				margin-bottom: 20px;
+			}
+	
+			.qr-code img {
+				max-width: 200px;
+				height: auto;
+			}
+		</style>
+	</head>
+	<body>
+		<p>Tunjukkan QR kode ini kepada petugas untuk mendapatkan layanan.</p>
+	</body>
+	</html>
+	`
+
+		go func() {
+			fmt.Println("Sending email...", email)
+			err = utils.SendEmail(email, subject, body, qrFile)
+			if err != nil {
+				c.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			transaction.QrCodeUrl = qrURL
+			if err := config.DB.Save(&transaction).Error; err != nil {
+				c.JSON(400, gin.H{"error": err.Error()})
+				return
+			}
+
+		}()
+
 	} else {
+
+		if statusInt == 5 {
+
+			qrData := strconv.Itoa(int(transaction.ID))
+			qrFile, err := utils.GenerateQRCode(qrData)
+			if err != nil {
+				c.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			key := fmt.Sprintf("qrcodes/%v.png", transaction.ID)
+			qrURL, err := utils.UploadToS3(qrFile, key)
+			if err != nil {
+				c.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			customer := models.Customer{}
+			config.DB.Where("id = ?", transaction.CustomerId).
+				Preload("User").
+				First(&customer)
+
+			email := customer.User.Email
+			subject := "QR Code Transaction"
+			body := `
+	<html>
+	<head>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				background-color: #f2f2f2;
+				padding: 20px;
+			}
+	
+			h1 {
+				color: #333333;
+				font-size: 24px;
+				font-weight: bold;
+				margin-bottom: 20px;
+			}
+	
+			p {
+				color: #666666;
+				font-size: 16px;
+				line-height: 1.5;
+				margin-bottom: 10px;
+			}
+	
+			.qr-code {
+				display: block;
+				text-align: center;
+				margin-bottom: 20px;
+			}
+	
+			.qr-code img {
+				max-width: 200px;
+				height: auto;
+			}
+		</style>
+	</head>
+	<body>
+		<p>Tunjukkan QR kode ini kepada petugas untuk mendapatkan layanan.</p>
+	</body>
+	</html>
+	`
+
+			go func() {
+				fmt.Println("Sending email...", email)
+				err = utils.SendEmail(email, subject, body, qrFile)
+				if err != nil {
+					c.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+
+				transaction.QrCodeUrl = qrURL
+				if err := config.DB.Save(&transaction).Error; err != nil {
+					c.JSON(400, gin.H{"error": err.Error()})
+					return
+				}
+
+			}()
+		}
 		transaction.StatusId = statusInt
+
 	}
 
 	if err := config.DB.Save(&transaction).Error; err != nil {
-		c.JSON(400, gin.H{
-			"error": err.Error(),
-		})
+		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, gin.H{
-		"message": fmt.Sprintf("Success update status to %s transaction with id %s", status, id),
-	})
+	c.JSON(200, gin.H{"message": "successfully updated status"})
 }
 
 func TestEndpoint(c *gin.Context) {
